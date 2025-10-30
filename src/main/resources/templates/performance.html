@@ -64,6 +64,7 @@
             border-radius: 15px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             margin-bottom: 30px;
+            position: relative;
         }
 
         .chart-title {
@@ -73,9 +74,15 @@
             font-weight: 600;
         }
 
-        .chart {
+        .chart-wrapper {
+            position: relative;
+            height: 350px;
             width: 100%;
-            height: 300px;
+        }
+
+        .chart {
+            width: 100% !important;
+            height: 100% !important;
         }
 
         .metrics-summary {
@@ -237,37 +244,74 @@
             </div>
         </div>
 
-        <div class="chart-container">
+        <div th:if="${!noConnections}" class="chart-container">
             <h2 class="chart-title">📈 Active Connections Over Time</h2>
-            <canvas id="connectionsChart" class="chart"></canvas>
+            <div class="chart-wrapper">
+                <canvas id="connectionsChart" class="chart"></canvas>
+            </div>
         </div>
 
-        <div class="chart-container">
+        <div th:if="${!noConnections}" class="chart-container">
             <h2 class="chart-title">⚡ CPU Usage History</h2>
-            <canvas id="cpuChart" class="chart"></canvas>
+            <div class="chart-wrapper">
+                <canvas id="cpuChart" class="chart"></canvas>
+            </div>
         </div>
 
-        <div class="chart-container">
+        <div th:if="${!noConnections}" class="chart-container">
             <h2 class="chart-title">💾 Memory Usage History</h2>
-            <canvas id="memoryChart" class="chart"></canvas>
+            <div class="chart-wrapper">
+                <canvas id="memoryChart" class="chart"></canvas>
+            </div>
         </div>
 
-        <div class="chart-container">
+        <div th:if="${!noConnections}" class="chart-container">
             <h2 class="chart-title">🔗 Connection Pool Utilization</h2>
-            <canvas id="poolChart" class="chart"></canvas>
+            <div class="chart-wrapper">
+                <canvas id="poolChart" class="chart"></canvas>
+            </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script th:if="${!noConnections}">
-        // Auto-refresh every 10 seconds
-        setTimeout(() => location.reload(), 10000);
+        async function initializePerformanceCharts() {
+            // Auto-refresh every 10 seconds
+            setTimeout(() => location.reload(), 20000);
 
-        // Get selected connection ID
-        const connectionId = /*[[${selectedConnection.id}]]*/ 0;
+            // Get selected connection ID
+            let connectionId = /*[[${selectedConnection?.id}]]*/ 0;
+            console.log('Performance page - Initial connection ID:', connectionId);
 
-        // Fetch metrics data
-        fetch(`/api/connections/${connectionId}/metrics/history?limit=50`)
+            // If connectionId is 0 or invalid, try to fetch from API
+            if (!connectionId || connectionId === 0) {
+                console.warn('Connection ID is 0! Attempting to fetch active connections from API...');
+
+                try {
+                    const response = await fetch('/api/connections/active');
+                    if (response.ok) {
+                        const connections = await response.json();
+                        console.log('Active connections from API:', connections);
+
+                        if (connections && connections.length > 0) {
+                            const defaultConn = connections.find(c => c.isDefault) || connections[0];
+                            connectionId = defaultConn.id;
+                            console.log('Using connection ID from API:', connectionId);
+                        } else {
+                            console.error('No active connections found');
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error fetching connections:', error);
+                    return;
+                }
+            }
+
+            console.log('Fetching metrics for connection ID:', connectionId);
+
+            // Fetch metrics data
+            fetch(`/api/connections/${connectionId}/metrics/history?limit=50`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -306,17 +350,47 @@
                             data: activeConnections,
                             borderColor: '#667eea',
                             backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                            tension: 0.4,
-                            fill: true
+                            tension: 0.3,
+                            fill: true,
+                            borderWidth: 2,
+                            pointRadius: 3,
+                            pointHoverRadius: 5
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true
+                        interaction: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
                             }
+                        },
+                        scales: {
+                            x: {
+                                display: true,
+                                ticks: {
+                                    maxRotation: 45,
+                                    minRotation: 0,
+                                    autoSkip: true,
+                                    maxTicksLimit: 10
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return Math.round(value);
+                                    }
+                                }
+                            }
+                        },
+                        animation: {
+                            duration: 0
                         }
                     }
                 });
@@ -331,18 +405,48 @@
                             data: cpuUsage,
                             borderColor: '#f093fb',
                             backgroundColor: 'rgba(240, 147, 251, 0.1)',
-                            tension: 0.4,
-                            fill: true
+                            tension: 0.3,
+                            fill: true,
+                            borderWidth: 2,
+                            pointRadius: 3,
+                            pointHoverRadius: 5
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            }
+                        },
                         scales: {
+                            x: {
+                                display: true,
+                                ticks: {
+                                    maxRotation: 45,
+                                    minRotation: 0,
+                                    autoSkip: true,
+                                    maxTicksLimit: 10
+                                }
+                            },
                             y: {
                                 beginAtZero: true,
-                                max: 100
+                                max: 100,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                }
                             }
+                        },
+                        animation: {
+                            duration: 0
                         }
                     }
                 });
@@ -357,18 +461,48 @@
                             data: memoryUsage,
                             borderColor: '#4facfe',
                             backgroundColor: 'rgba(79, 172, 254, 0.1)',
-                            tension: 0.4,
-                            fill: true
+                            tension: 0.3,
+                            fill: true,
+                            borderWidth: 2,
+                            pointRadius: 3,
+                            pointHoverRadius: 5
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            }
+                        },
                         scales: {
+                            x: {
+                                display: true,
+                                ticks: {
+                                    maxRotation: 45,
+                                    minRotation: 0,
+                                    autoSkip: true,
+                                    maxTicksLimit: 10
+                                }
+                            },
                             y: {
                                 beginAtZero: true,
-                                max: 100
+                                max: 100,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                }
                             }
+                        },
+                        animation: {
+                            duration: 0
                         }
                     }
                 });
@@ -383,18 +517,48 @@
                             data: connectionUsage,
                             borderColor: '#00d2ff',
                             backgroundColor: 'rgba(0, 210, 255, 0.1)',
-                            tension: 0.4,
-                            fill: true
+                            tension: 0.3,
+                            fill: true,
+                            borderWidth: 2,
+                            pointRadius: 3,
+                            pointHoverRadius: 5
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            }
+                        },
                         scales: {
+                            x: {
+                                display: true,
+                                ticks: {
+                                    maxRotation: 45,
+                                    minRotation: 0,
+                                    autoSkip: true,
+                                    maxTicksLimit: 10
+                                }
+                            },
                             y: {
                                 beginAtZero: true,
-                                max: 100
+                                max: 100,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                }
                             }
+                        },
+                        animation: {
+                            duration: 0
                         }
                     }
                 });
@@ -404,13 +568,23 @@
                 // Display error message on all charts
                 ['connectionsChart', 'cpuChart', 'memoryChart', 'poolChart'].forEach(chartId => {
                     const canvas = document.getElementById(chartId);
-                    const ctx = canvas.getContext('2d');
-                    ctx.font = '16px Arial';
-                    ctx.fillStyle = '#ff6b6b';
-                    ctx.textAlign = 'center';
-                    ctx.fillText('Failed to load chart. Check console for details.', canvas.width / 2, canvas.height / 2);
+                    if (canvas) {
+                        const ctx = canvas.getContext('2d');
+                        ctx.font = '16px Arial';
+                        ctx.fillStyle = '#ff6b6b';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('Failed to load chart. Check console for details.', canvas.width / 2, canvas.height / 2);
+                    }
                 });
             });
+        }
+
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializePerformanceCharts);
+        } else {
+            initializePerformanceCharts();
+        }
     </script>
 </body>
 </html>
