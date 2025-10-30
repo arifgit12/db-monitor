@@ -4,16 +4,19 @@ import com.dbmonitor.model.DatabaseConnection;
 import com.dbmonitor.model.DatabaseMetrics;
 import com.dbmonitor.service.DatabaseConnectionService;
 import com.dbmonitor.service.MultiDatabaseMonitoringService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/connections")
+@Slf4j
 public class ConnectionApiController {
 
     @Autowired
@@ -61,31 +64,45 @@ public class ConnectionApiController {
     public ResponseEntity<Map<String, Object>> getChartData(
             @PathVariable Long id,
             @RequestParam(defaultValue = "30") int limit) {
+        log.info("GET /api/connections/{}/metrics/chart-data?limit={} - Received request", id, limit);
+
+        if (id == null || id == 0) {
+            log.error("Invalid connection ID received: {}", id);
+            Map<String, Object> emptyData = new HashMap<>();
+            emptyData.put("timestamps", new ArrayList<>());
+            emptyData.put("activeConnections", new ArrayList<>());
+            emptyData.put("cpuUsage", new ArrayList<>());
+            emptyData.put("memoryUsage", new ArrayList<>());
+            return ResponseEntity.ok(emptyData);
+        }
+
         List<DatabaseMetrics> history = monitoringService.getMetricsHistory(id, limit);
-        
+        log.info("Retrieved {} metrics records for connection ID: {}", history.size(), id);
+
         Map<String, Object> chartData = new HashMap<>();
-        
+
         List<String> timestamps = history.stream()
                 .map(m -> m.getTimestamp().toString())
                 .toList();
-        
+
         List<Integer> activeConnections = history.stream()
                 .map(DatabaseMetrics::getActiveConnections)
                 .toList();
-        
+
         List<Double> cpuUsage = history.stream()
                 .map(DatabaseMetrics::getCpuUsage)
                 .toList();
-        
+
         List<Double> memoryUsage = history.stream()
                 .map(DatabaseMetrics::getMemoryUsage)
                 .toList();
-        
+
         chartData.put("timestamps", timestamps);
         chartData.put("activeConnections", activeConnections);
         chartData.put("cpuUsage", cpuUsage);
         chartData.put("memoryUsage", memoryUsage);
-        
+
+        log.info("Returning chart data with {} data points", timestamps.size());
         return ResponseEntity.ok(chartData);
     }
 

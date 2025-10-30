@@ -137,6 +137,7 @@
             border-radius: 15px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             margin-bottom: 30px;
+            position: relative;
         }
 
         .chart-title {
@@ -146,9 +147,15 @@
             font-weight: 600;
         }
 
-        .chart {
+        .chart-wrapper {
+            position: relative;
+            height: 350px;
             width: 100%;
-            height: 300px;
+        }
+
+        .chart {
+            width: 100% !important;
+            height: 100% !important;
         }
 
         .alert-badge {
@@ -386,82 +393,292 @@
             </div>
         </div>
 
-        <div class="chart-container">
+        <div th:if="${!noConnections}" class="chart-container">
             <h2 class="chart-title">Real-Time Metrics</h2>
-            <canvas id="metricsChart" class="chart"></canvas>
+            <div class="chart-wrapper">
+                <canvas id="metricsChart" class="chart"></canvas>
+            </div>
         </div>
 
-        <div class="refresh-info">
+        <div th:if="${!noConnections}" class="refresh-info">
             Last updated: <span id="lastUpdate" th:text="${#temporals.format(currentMetrics.timestamp, 'yyyy-MM-dd HH:mm:ss')}"></span>
-            | Auto-refresh every 5 seconds
+            | Auto-refresh every 10 seconds
         </div>
     </div>
 
+    <!-- Debug: Show what Thymeleaf is rendering -->
+    <!--
+    DEBUG INFO:
+    noConnections: [[${noConnections}]]
+    selectedConnection: [[${selectedConnection}]]
+    selectedConnection.id: [[${selectedConnection?.id}]]
+    -->
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script th:if="${!noConnections}">
-        // Auto-refresh page
-        setTimeout(() => location.reload(), 5000);
+        // Wait for Chart.js to load and DOM to be ready
+        async function initializeChart() {
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js not loaded yet, retrying...');
+                setTimeout(initializeChart, 100);
+                return;
+            }
 
-        // Get selected connection ID
-        const connectionId = /*[[${selectedConnection.id}]]*/ 0;
+            // Auto-refresh page
+            setTimeout(() => location.reload(), 10000);
 
-        // Fetch and display chart data
-        fetch(`/api/connections/${connectionId}/metrics/chart-data?limit=30`)
-            .then(response => response.json())
-            .then(data => {
-                const ctx = document.getElementById('metricsChart').getContext('2d');
-                new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: data.timestamps.map(t => new Date(t).toLocaleTimeString()),
-                        datasets: [
-                            {
-                                label: 'Active Connections',
-                                data: data.activeConnections,
-                                borderColor: '#667eea',
-                                backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                                tension: 0.4,
-                                fill: true
-                            },
-                            {
-                                label: 'CPU Usage (%)',
-                                data: data.cpuUsage,
-                                borderColor: '#f093fb',
-                                backgroundColor: 'rgba(240, 147, 251, 0.1)',
-                                tension: 0.4,
-                                fill: true
-                            },
-                            {
-                                label: 'Memory Usage (%)',
-                                data: data.memoryUsage,
-                                borderColor: '#4facfe',
-                                backgroundColor: 'rgba(79, 172, 254, 0.1)',
-                                tension: 0.4,
-                                fill: true
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'top',
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
+            // Get selected connection ID from Thymeleaf
+            let connectionId = /*[[${selectedConnection?.id}]]*/ 0;
+            console.log('Initial connection ID from template:', connectionId);
+            console.log('Selected connection from template:', /*[[${selectedConnection}]]*/ null);
+
+            // If connectionId is 0 or invalid, try to fetch from API
+            if (!connectionId || connectionId === 0) {
+                console.warn('Connection ID is 0! Attempting to fetch active connections from API...');
+
+                try {
+                    const response = await fetch('/api/connections/active');
+                    if (response.ok) {
+                        const connections = await response.json();
+                        console.log('Active connections from API:', connections);
+
+                        if (connections && connections.length > 0) {
+                            // Find default connection or use first one
+                            const defaultConn = connections.find(c => c.isDefault) || connections[0];
+                            connectionId = defaultConn.id;
+                            console.log('Using connection ID from API:', connectionId, 'Name:', defaultConn.connectionName);
+                        } else {
+                            console.error('No active connections found in API response');
                         }
                     }
-                });
-            });
+                } catch (error) {
+                    console.error('Error fetching connections from API:', error);
+                }
+            }
 
-        // Update last update time
-        setInterval(() => {
-            document.getElementById('lastUpdate').textContent = new Date().toLocaleString();
-        }, 1000);
+            // Final validation
+            if (!connectionId || connectionId === 0) {
+                console.error('FATAL: Still no valid connection ID after API fallback!');
+                const canvas = document.getElementById('metricsChart');
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    ctx.font = '16px Arial';
+                    ctx.fillStyle = '#ff6b6b';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Error: No database connection available. Please configure a connection.', canvas.width / 2, canvas.height / 2);
+                }
+                return;
+            }
+
+            console.log('Final connection ID for chart:', connectionId);
+
+            // Fetch and display chart data
+            fetch(`/api/connections/${connectionId}/metrics/chart-data?limit=30`)
+                .then(response => {
+                    console.log('API response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Chart data received:', data);
+
+                    // Validate data structure
+                    if (!data.timestamps || !data.activeConnections || !data.cpuUsage || !data.memoryUsage) {
+                        throw new Error('Invalid data structure received from API');
+                    }
+
+                    const canvas = document.getElementById('metricsChart');
+                    if (!canvas) {
+                        console.error('Canvas element not found!');
+                        return;
+                    }
+
+                    // Check if we have data
+                    if (data.timestamps.length === 0) {
+                        console.warn('No data points available yet. Waiting for metrics collection...');
+                        const ctx = canvas.getContext('2d');
+                        ctx.font = '16px Arial';
+                        ctx.fillStyle = '#999';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('Waiting for metrics data... Please wait a few seconds.', canvas.width / 2, canvas.height / 2);
+                        return;
+                    }
+
+                    const ctx = canvas.getContext('2d');
+
+                    // Calculate appropriate max values for better scaling
+                    const maxActiveConn = Math.max(...data.activeConnections, 10);
+                    const maxCpu = Math.max(...data.cpuUsage, 100);
+                    const maxMem = Math.max(...data.memoryUsage, 100);
+
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.timestamps.map(t => new Date(t).toLocaleTimeString()),
+                            datasets: [
+                                {
+                                    label: 'Active Connections',
+                                    data: data.activeConnections,
+                                    borderColor: '#667eea',
+                                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                                    tension: 0.3,
+                                    fill: true,
+                                    borderWidth: 2,
+                                    pointRadius: 3,
+                                    pointHoverRadius: 5,
+                                    yAxisID: 'y'
+                                },
+                                {
+                                    label: 'CPU Usage (%)',
+                                    data: data.cpuUsage,
+                                    borderColor: '#f093fb',
+                                    backgroundColor: 'rgba(240, 147, 251, 0.1)',
+                                    tension: 0.3,
+                                    fill: true,
+                                    borderWidth: 2,
+                                    pointRadius: 3,
+                                    pointHoverRadius: 5,
+                                    yAxisID: 'y'
+                                },
+                                {
+                                    label: 'Memory Usage (%)',
+                                    data: data.memoryUsage,
+                                    borderColor: '#4facfe',
+                                    backgroundColor: 'rgba(79, 172, 254, 0.1)',
+                                    tension: 0.3,
+                                    fill: true,
+                                    borderWidth: 2,
+                                    pointRadius: 3,
+                                    pointHoverRadius: 5,
+                                    yAxisID: 'y'
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            interaction: {
+                                mode: 'index',
+                                intersect: false
+                            },
+                            plugins: {
+                                legend: {
+                                    position: 'top',
+                                    labels: {
+                                        usePointStyle: true,
+                                        padding: 15,
+                                        font: {
+                                            size: 12
+                                        }
+                                    }
+                                },
+                                tooltip: {
+                                    enabled: true,
+                                    mode: 'index',
+                                    intersect: false,
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.dataset.label || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            label += context.parsed.y.toFixed(2);
+                                            if (context.dataset.label.includes('%')) {
+                                                label += '%';
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    display: true,
+                                    title: {
+                                        display: true,
+                                        text: 'Time',
+                                        font: {
+                                            size: 12
+                                        }
+                                    },
+                                    ticks: {
+                                        maxRotation: 45,
+                                        minRotation: 0,
+                                        autoSkip: true,
+                                        maxTicksLimit: 8,
+                                        font: {
+                                            size: 10
+                                        }
+                                    },
+                                    grid: {
+                                        display: true,
+                                        drawBorder: true,
+                                        color: 'rgba(0, 0, 0, 0.05)'
+                                    }
+                                },
+                                y: {
+                                    display: true,
+                                    beginAtZero: true,
+                                    suggestedMax: Math.ceil(Math.max(maxActiveConn, maxCpu, maxMem) * 1.2 / 10) * 10,
+                                    title: {
+                                        display: true,
+                                        text: 'Value',
+                                        font: {
+                                            size: 12
+                                        }
+                                    },
+                                    ticks: {
+                                        callback: function(value) {
+                                            return Math.round(value);
+                                        },
+                                        stepSize: 10,
+                                        font: {
+                                            size: 10
+                                        }
+                                    },
+                                    grid: {
+                                        display: true,
+                                        drawBorder: true,
+                                        color: 'rgba(0, 0, 0, 0.05)'
+                                    }
+                                }
+                            },
+                            animation: {
+                                duration: 0  // Disable animation to prevent flickering
+                            }
+                        }
+                    });
+                    console.log('Chart initialized successfully');
+                })
+                .catch(error => {
+                    console.error('Error loading chart data:', error);
+                    const canvas = document.getElementById('metricsChart');
+                    if (canvas) {
+                        const ctx = canvas.getContext('2d');
+                        ctx.font = '16px Arial';
+                        ctx.fillStyle = '#ff6b6b';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('Failed to load chart data. Check console for details.', canvas.width / 2, canvas.height / 2);
+                    }
+                });
+
+            // Update last update time
+            setInterval(() => {
+                const lastUpdateEl = document.getElementById('lastUpdate');
+                if (lastUpdateEl) {
+                    lastUpdateEl.textContent = new Date().toLocaleString();
+                }
+            }, 1000);
+        }
+
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeChart);
+        } else {
+            initializeChart();
+        }
     </script>
 </body>
 </html>

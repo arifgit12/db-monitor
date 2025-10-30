@@ -20,9 +20,13 @@ public class DefaultConnectionInitializer implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) {
         // Check if any connections exist
-        if (connectionService.getAllConnections().isEmpty()) {
+        log.info("Checking for existing database connections...");
+        int existingCount = connectionService.getAllConnections().size();
+        log.info("Found {} existing connections", existingCount);
+
+        if (existingCount == 0) {
             log.info("No database connections found. Creating default H2 connection...");
-            
+
             DatabaseConnection defaultConnection = DatabaseConnection.builder()
                     .connectionName("Default H2 Database")
                     .databaseType("H2")
@@ -38,13 +42,22 @@ public class DefaultConnectionInitializer implements ApplicationRunner {
                     .maxPoolSize(20)
                     .connectionTimeout(30000)
                     .build();
-            
+
             try {
-                connectionService.saveConnection(defaultConnection);
-                log.info("Default H2 connection created successfully");
+                DatabaseConnection saved = connectionService.saveConnection(defaultConnection);
+                log.info("Default H2 connection created successfully with ID: {}", saved.getId());
+                log.info("Connection details - Name: {}, Type: {}, JDBC URL: {}",
+                    saved.getConnectionName(), saved.getDatabaseType(), saved.getJdbcUrl());
+
+                // Test the connection
+                boolean testResult = connectionService.testConnection(saved);
+                log.info("Connection test result: {}", testResult ? "SUCCESS" : "FAILED");
             } catch (Exception e) {
                 log.error("Error creating default connection", e);
+                e.printStackTrace();
             }
+        } else {
+            log.info("Existing connections found, skipping default connection creation");
         }
     }
 }

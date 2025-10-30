@@ -268,8 +268,18 @@
 
         // Fetch metrics data
         fetch(`/api/connections/${connectionId}/metrics/history?limit=50`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
+                // Validate data
+                if (!Array.isArray(data) || data.length === 0) {
+                    throw new Error('No metrics data available');
+                }
+
                 const timestamps = data.map(m => new Date(m.timestamp).toLocaleTimeString());
                 const activeConnections = data.map(m => m.activeConnections);
                 const cpuUsage = data.map(m => m.cpuUsage);
@@ -277,13 +287,13 @@
                 const connectionUsage = data.map(m => m.connectionUsagePercent);
 
                 // Calculate summaries
-                document.getElementById('avgCpu').textContent = 
+                document.getElementById('avgCpu').textContent =
                     (cpuUsage.reduce((a, b) => a + b, 0) / cpuUsage.length).toFixed(1) + '%';
-                document.getElementById('avgMemory').textContent = 
+                document.getElementById('avgMemory').textContent =
                     (memoryUsage.reduce((a, b) => a + b, 0) / memoryUsage.length).toFixed(1) + '%';
-                document.getElementById('peakConnections').textContent = 
+                document.getElementById('peakConnections').textContent =
                     Math.max(...activeConnections);
-                document.getElementById('avgConnections').textContent = 
+                document.getElementById('avgConnections').textContent =
                     (activeConnections.reduce((a, b) => a + b, 0) / activeConnections.length).toFixed(0);
 
                 // Connections Chart
@@ -387,6 +397,18 @@
                             }
                         }
                     }
+                });
+            })
+            .catch(error => {
+                console.error('Error loading performance data:', error);
+                // Display error message on all charts
+                ['connectionsChart', 'cpuChart', 'memoryChart', 'poolChart'].forEach(chartId => {
+                    const canvas = document.getElementById(chartId);
+                    const ctx = canvas.getContext('2d');
+                    ctx.font = '16px Arial';
+                    ctx.fillStyle = '#ff6b6b';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Failed to load chart. Check console for details.', canvas.width / 2, canvas.height / 2);
                 });
             });
     </script>

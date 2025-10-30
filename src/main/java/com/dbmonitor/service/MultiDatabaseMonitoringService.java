@@ -37,33 +37,52 @@ public class MultiDatabaseMonitoringService {
 
     @Scheduled(fixedDelayString = "${monitor.refresh.interval-ms:5000}")
     public void collectMetricsForAllConnections() {
+        log.info("Starting scheduled metrics collection...");
         List<DatabaseConnection> activeConnections = connectionService.getActiveConnections();
-        
+        log.info("Found {} active connections to monitor", activeConnections.size());
+
+        if (activeConnections.isEmpty()) {
+            log.warn("No active connections found for metrics collection!");
+            return;
+        }
+
         for (DatabaseConnection conn : activeConnections) {
             try {
+                log.info("Collecting metrics for connection ID: {}, Name: '{}'",
+                    conn.getId(), conn.getConnectionName());
+
                 DatabaseMetrics metrics = getCurrentMetrics(conn.getId());
-                
+
                 // Add to history
-                metricsHistoryMap.computeIfAbsent(conn.getId(), k -> new ArrayList<>());
+                metricsHistoryMap.computeIfAbsent(conn.getId(), k -> {
+                    log.info("Creating new metrics history list for connection ID: {}", conn.getId());
+                    return new ArrayList<>();
+                });
                 List<DatabaseMetrics> history = metricsHistoryMap.get(conn.getId());
-                
+
                 synchronized (history) {
                     history.add(metrics);
                     if (history.size() > MAX_HISTORY_SIZE) {
                         history.remove(0);
                     }
+                    log.info("Metrics added to history for connection ID: {}. History size: {}",
+                        conn.getId(), history.size());
                 }
-                
-                log.debug("Collected metrics for '{}': Active Connections={}, CPU={}%, Memory={}%",
+
+                log.info("Collected metrics for '{}': Active Connections={}, CPU={}%, Memory={}%",
                         conn.getConnectionName(),
                         metrics.getActiveConnections(),
                         String.format("%.2f", metrics.getCpuUsage()),
                         String.format("%.2f", metrics.getMemoryUsage()));
-                
+
             } catch (Exception e) {
-                log.error("Error collecting metrics for connection '{}'", conn.getConnectionName(), e);
+                log.error("Error collecting metrics for connection '{}' (ID: {})",
+                    conn.getConnectionName(), conn.getId(), e);
+                e.printStackTrace();
             }
         }
+
+        log.info("Metrics collection completed. Total connections in map: {}", metricsHistoryMap.size());
     }
 
     public DatabaseMetrics getCurrentMetrics(Long connectionId) {
@@ -135,23 +154,34 @@ public class MultiDatabaseMonitoringService {
     }
 
     public List<DatabaseMetrics> getMetricsHistory(Long connectionId) {
+        log.info("getMetricsHistory called for connection ID: {}", connectionId);
+        log.info("Current map contains {} connections: {}", metricsHistoryMap.size(), metricsHistoryMap.keySet());
+
         List<DatabaseMetrics> history = metricsHistoryMap.get(connectionId);
         if (history == null) {
+            log.warn("No history found for connection ID: {}", connectionId);
             return new ArrayList<>();
         }
         synchronized (history) {
+            log.info("Returning {} metrics records for connection ID: {}", history.size(), connectionId);
             return new ArrayList<>(history);
         }
     }
 
     public List<DatabaseMetrics> getMetricsHistory(Long connectionId, int limit) {
+        log.info("getMetricsHistory(limit={}) called for connection ID: {}", limit, connectionId);
+        log.info("Current map contains {} connections: {}", metricsHistoryMap.size(), metricsHistoryMap.keySet());
+
         List<DatabaseMetrics> history = metricsHistoryMap.get(connectionId);
         if (history == null) {
+            log.warn("No history found for connection ID: {}", connectionId);
             return new ArrayList<>();
         }
         synchronized (history) {
             int size = history.size();
             int start = Math.max(0, size - limit);
+            log.info("Returning {} metrics records (from {} total) for connection ID: {}",
+                size - start, size, connectionId);
             return new ArrayList<>(history.subList(start, size));
         }
     }
