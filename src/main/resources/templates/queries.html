@@ -58,6 +58,42 @@
             color: white;
         }
 
+        .connection-tabs {
+            background: white;
+            padding: 10px 20px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .tab a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .tab:hover {
+            background: #f8f9fa;
+        }
+
+        .tab.active {
+            background: #667eea;
+        }
+
+        .tab.active a {
+            color: white;
+        }
+
         .section {
             background: white;
             padding: 30px;
@@ -186,7 +222,24 @@
             </div>
         </div>
 
-        <div class="stats-grid">
+        <!-- No Connections Message -->
+        <div th:if="${noConnections}" class="no-data">
+            <h2>No Database Connections Configured</h2>
+            <p>Please add a database connection to start monitoring queries</p>
+            <br>
+            <a href="/connections-config/new" class="btn btn-primary">Add Connection</a>
+        </div>
+
+        <!-- Connection Tabs -->
+        <div th:if="${!noConnections}" class="connection-tabs">
+            <div th:each="conn : ${connections}"
+                 class="tab"
+                 th:classappend="${conn.id == selectedConnection.id ? 'active' : ''}">
+                <a th:href="@{/queries(connectionId=${conn.id})}" th:text="${conn.connectionName}">Connection Name</a>
+            </div>
+        </div>
+
+        <div th:if="${!noConnections}" class="stats-grid">
             <div class="stat-card">
                 <div class="stat-value" th:text="${#lists.size(queries)}">0</div>
                 <div class="stat-label">Total Queries</div>
@@ -197,7 +250,7 @@
             </div>
         </div>
 
-        <div class="section">
+        <div th:if="${!noConnections}" class="section">
             <h2 class="section-title">🐌 Slow Queries</h2>
             <div class="table-container">
                 <table th:if="${!#lists.isEmpty(slowQueries)}">

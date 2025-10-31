@@ -101,10 +101,38 @@ public class DashboardController {
     }
 
     @GetMapping("/queries")
-    public String queries(Model model) {
-        model.addAttribute("queries", queryMonitoringService.getAllQueries());
-        model.addAttribute("slowQueries", queryMonitoringService.getSlowQueries());
-        model.addAttribute("connections", connectionService.getActiveConnections());
+    public String queries(@RequestParam(required = false) Long connectionId, Model model) {
+        List<DatabaseConnection> activeConnections = connectionService.getActiveConnections();
+
+        boolean noConnections = activeConnections.isEmpty();
+        model.addAttribute("noConnections", noConnections);
+
+        if (activeConnections.isEmpty()) {
+            model.addAttribute("connections", new ArrayList<DatabaseConnection>());
+            model.addAttribute("queries", new ArrayList<>());
+            model.addAttribute("slowQueries", new ArrayList<>());
+            return "queries";
+        }
+
+        // Determine which connection to display
+        DatabaseConnection selectedConnection;
+        if (connectionId != null) {
+            log.info("Selecting connection by ID: {}", connectionId);
+            selectedConnection = connectionService.getConnectionById(connectionId)
+                    .orElse(activeConnections.get(0));
+        } else {
+            log.info("Selecting default connection or first active");
+            selectedConnection = connectionService.getDefaultConnection()
+                    .orElse(activeConnections.get(0));
+        }
+
+        log.info("Fetching queries for connection - ID: {}, Name: '{}'",
+            selectedConnection.getId(), selectedConnection.getConnectionName());
+
+        model.addAttribute("connections", activeConnections);
+        model.addAttribute("selectedConnection", selectedConnection);
+        model.addAttribute("queries", queryMonitoringService.getQueriesFromDatabase(selectedConnection.getId()));
+        model.addAttribute("slowQueries", queryMonitoringService.getSlowQueriesFromDatabase(selectedConnection.getId()));
         return "queries";
     }
 
