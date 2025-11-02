@@ -3,13 +3,12 @@ package com.dbmonitor.service;
 import com.dbmonitor.model.DatabaseConnection;
 import com.dbmonitor.model.QueryMetrics;
 import com.dbmonitor.repository.QueryMetricsRepository;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -109,23 +108,34 @@ public class QueryMonitoringService {
             DatabaseConnection conn = connectionService.getConnectionById(connectionId)
                     .orElseThrow(() -> new RuntimeException("Connection not found: " + connectionId));
 
-            log.info("Fetching queries from database type: {}", conn.getDatabaseType());
+            log.info("Fetching queries for connection ID: {}, Name: '{}', Type: '{}'",
+                connectionId, conn.getConnectionName(), conn.getDatabaseType());
 
-            switch (conn.getDatabaseType().toUpperCase()) {
-                case "SQL SERVER":
+            // Normalize database type by removing spaces and converting to uppercase
+            String normalizedType = conn.getDatabaseType().toUpperCase().replace(" ", "");
+            log.info("Normalized database type: '{}'", normalizedType);
+
+            switch (normalizedType) {
+                case "SQLSERVER":
+                    log.info("Calling getQueriesFromSqlServer()");
                     return getQueriesFromSqlServer(conn);
                 case "MYSQL":
+                    log.info("Calling getQueriesFromMySQL()");
                     return getQueriesFromMySQL(conn);
                 case "POSTGRESQL":
+                    log.info("Calling getQueriesFromPostgreSQL()");
                     return getQueriesFromPostgreSQL(conn);
                 case "H2":
+                    log.info("Calling getQueriesFromH2()");
                     return getQueriesFromH2(conn);
                 default:
-                    log.warn("Query monitoring not supported for database type: {}", conn.getDatabaseType());
+                    log.warn("Query monitoring not supported for database type: '{}' (normalized: '{}')",
+                        conn.getDatabaseType(), normalizedType);
                     return new ArrayList<>();
             }
         } catch (Exception e) {
-            log.error("Error fetching queries from database", e);
+            log.error("Error fetching queries from database for connection ID: {}", connectionId, e);
+            e.printStackTrace();
             return new ArrayList<>();
         }
     }
@@ -157,10 +167,12 @@ public class QueryMonitoringService {
             ORDER BY qs.last_execution_time DESC
             """;
 
-        try (HikariDataSource dataSource = createDataSource(conn);
-             Connection connection = dataSource.getConnection();
-             PreparedStatement stmt = connection.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+        try {
+            // Use the connectionService's datasource which has proper SSL handling
+            DataSource dataSource = connectionService.getDataSource(conn.getId());
+            Connection connection = dataSource.getConnection();
+            PreparedStatement stmt = connection.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery();
 
             log.info("Executing query against SQL Server: {}", conn.getConnectionName());
 
@@ -182,8 +194,13 @@ public class QueryMonitoringService {
             }
 
             log.info("Retrieved {} queries from SQL Server", queries.size());
+
+            rs.close();
+            stmt.close();
+            connection.close();
         } catch (Exception e) {
             log.error("Error querying SQL Server system views", e);
+            e.printStackTrace();
         }
 
         return queries;
@@ -205,10 +222,11 @@ public class QueryMonitoringService {
             LIMIT 50
             """;
 
-        try (HikariDataSource dataSource = createDataSource(conn);
-             Connection connection = dataSource.getConnection();
-             PreparedStatement stmt = connection.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+        try {
+            DataSource dataSource = connectionService.getDataSource(conn.getId());
+            Connection connection = dataSource.getConnection();
+            PreparedStatement stmt = connection.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
                 String queryText = rs.getString("query_text");
@@ -228,8 +246,13 @@ public class QueryMonitoringService {
             }
 
             log.info("Retrieved {} queries from MySQL", queries.size());
+
+            rs.close();
+            stmt.close();
+            connection.close();
         } catch (Exception e) {
             log.error("Error querying MySQL performance schema", e);
+            e.printStackTrace();
         }
 
         return queries;
@@ -250,10 +273,11 @@ public class QueryMonitoringService {
             LIMIT 50
             """;
 
-        try (HikariDataSource dataSource = createDataSource(conn);
-             Connection connection = dataSource.getConnection();
-             PreparedStatement stmt = connection.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+        try {
+            DataSource dataSource = connectionService.getDataSource(conn.getId());
+            Connection connection = dataSource.getConnection();
+            PreparedStatement stmt = connection.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
                 String queryText = rs.getString("query_text");
@@ -273,8 +297,13 @@ public class QueryMonitoringService {
             }
 
             log.info("Retrieved {} queries from PostgreSQL", queries.size());
+
+            rs.close();
+            stmt.close();
+            connection.close();
         } catch (Exception e) {
             log.error("Error querying PostgreSQL pg_stat_statements", e);
+            e.printStackTrace();
         }
 
         return queries;
@@ -284,19 +313,6 @@ public class QueryMonitoringService {
         // H2 doesn't have built-in query statistics, return empty list
         log.info("H2 database doesn't support query monitoring");
         return new ArrayList<>();
-    }
-
-    private HikariDataSource createDataSource(DatabaseConnection conn) {
-        HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(conn.getJdbcUrl());
-        config.setUsername(conn.getUsername());
-        config.setPassword(conn.getPassword());
-        config.setDriverClassName(conn.getDriverClassName());
-        config.setMaximumPoolSize(2);
-        config.setMinimumIdle(1);
-        config.setConnectionTimeout(conn.getConnectionTimeout());
-
-        return new HikariDataSource(config);
     }
 
     private String determineQueryType(String queryText) {
