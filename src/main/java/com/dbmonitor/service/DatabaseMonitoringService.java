@@ -29,7 +29,10 @@ public class DatabaseMonitoringService {
     private DataSource dataSource;
 
     @Autowired
-    private AlertRepository alertRepository;
+    private AlertService alertService;
+
+    @Autowired(required = false)
+    private TimeSeriesPersistenceService timeSeriesService;
 
     @Value("${monitor.alert.cpu-threshold:80}")
     private double cpuThreshold;
@@ -52,6 +55,15 @@ public class DatabaseMonitoringService {
                 metricsHistory.add(metrics);
                 if (metricsHistory.size() > MAX_HISTORY_SIZE) {
                     metricsHistory.remove(0);
+                }
+            }
+
+            // Persist to time-series database
+            if (timeSeriesService != null) {
+                try {
+                    timeSeriesService.persistMetrics(metrics);
+                } catch (Exception e) {
+                    log.error("Failed to persist metrics to time-series DB", e);
                 }
             }
 
@@ -161,9 +173,10 @@ public class DatabaseMonitoringService {
     private void createAlert(String type, String severity, String message, double value, double threshold) {
         // Check if similar alert already exists in last 5 minutes
         LocalDateTime fiveMinutesAgo = LocalDateTime.now().minusMinutes(5);
-        List<Alert> recentAlerts = alertRepository.findByCreatedAtAfterOrderByCreatedAtDesc(fiveMinutesAgo);
+        List<Alert> recentAlerts = alertService.getRecentAlerts(0);
         
         boolean alertExists = recentAlerts.stream()
+                .filter(a -> a.getCreatedAt().isAfter(fiveMinutesAgo))
                 .anyMatch(a -> a.getAlertType().equals(type) && !a.getAcknowledged());
         
         if (!alertExists) {
@@ -176,7 +189,7 @@ public class DatabaseMonitoringService {
                     .metricValue(value)
                     .threshold(threshold)
                     .build();
-            alertRepository.save(alert);
+            alertService.createAlert(alert);
             log.warn("Alert created: {} - {}", type, message);
         }
     }
