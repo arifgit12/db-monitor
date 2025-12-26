@@ -17,6 +17,9 @@ public class AlertService {
     @Autowired
     private AlertRepository alertRepository;
 
+    @Autowired(required = false)
+    private NotificationService notificationService;
+
     public List<Alert> getAllAlerts() {
         return alertRepository.findAll();
     }
@@ -36,6 +39,22 @@ public class AlertService {
 
     public Long getUnacknowledgedCount() {
         return alertRepository.countByAcknowledgedFalse();
+    }
+
+    public Alert createAlert(Alert alert) {
+        Alert saved = alertRepository.save(alert);
+        log.info("Alert created: {}", alert.getMessage());
+        
+        // Send notifications
+        if (notificationService != null) {
+            try {
+                notificationService.sendAlertNotifications(saved);
+            } catch (Exception e) {
+                log.error("Failed to send alert notifications", e);
+            }
+        }
+        
+        return saved;
     }
 
     public void acknowledgeAlert(Long id) {
