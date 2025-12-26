@@ -339,23 +339,135 @@ Simply update the datasource configuration in `application.properties`.
 ## Performance Considerations
 
 - The application stores metrics history in memory (last 100 data points)
-- For production use, consider persisting metrics to a time-series database
+- For production use, consider persisting metrics to a time-series database (InfluxDB integration available)
 - Adjust refresh intervals based on your needs
 - Configure connection pool sizes according to your workload
 
-## Future Enhancements
+## Enterprise Features
 
-Potential features to add:
-- Email/SMS alert notifications
-- Custom dashboard widgets
-- Export reports (PDF, Excel)
-- Multi-database monitoring
-- User authentication and authorization
-- Metric persistence to time-series database
-- Query plan analysis
-- Index recommendations
-- Backup monitoring
-- Replication lag tracking
+### 1. Email/SMS Alert Notifications
+
+Configure email and SMS notifications for database alerts:
+
+```properties
+# Email Configuration
+notification.email.enabled=true
+notification.email.from=noreply@dbmonitor.com
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=your-email@gmail.com
+spring.mail.password=your-password
+
+# SMS Configuration (Twilio)
+notification.sms.enabled=true
+notification.sms.twilio.account-sid=your-twilio-sid
+notification.sms.twilio.auth-token=your-twilio-token
+notification.sms.twilio.from-number=+1234567890
+```
+
+**API Endpoints:**
+- `GET /api/notifications/preferences` - Get all notification preferences
+- `POST /api/notifications/preferences` - Create notification preference
+- `POST /api/notifications/test/email?to=email@example.com` - Test email notification
+- `POST /api/notifications/test/sms?to=+1234567890` - Test SMS notification
+
+### 2. Custom Dashboard Widgets
+
+Create and manage custom dashboard widgets for personalized monitoring:
+
+**API Endpoints:**
+- `GET /api/widgets/user/{userId}` - Get user's widgets
+- `POST /api/widgets` - Create new widget
+- `PUT /api/widgets/{id}` - Update widget
+- `DELETE /api/widgets/{id}` - Delete widget
+- `POST /api/widgets/user/{userId}/reorder` - Reorder widgets
+
+### 3. Export Reports (PDF, Excel)
+
+Export database metrics, queries, and alerts to PDF or Excel:
+
+**API Endpoints:**
+- `GET /api/reports/metrics/pdf?connectionId={id}` - Export metrics to PDF
+- `GET /api/reports/metrics/excel?connectionId={id}` - Export metrics to Excel
+- `GET /api/reports/queries/excel` - Export queries to Excel
+- `GET /api/reports/alerts/pdf` - Export alerts to PDF
+
+### 4. Multi-Database Monitoring
+
+Monitor multiple database connections simultaneously. Already implemented with `DatabaseConnectionService` and `MultiDatabaseMonitoringService`.
+
+### 5. User Authentication and Authorization
+
+Secure access with role-based authentication:
+
+```properties
+# Enable Security
+security.enabled=true
+```
+
+**API Endpoints:**
+- `GET /api/users` - Get all users
+- `POST /api/users` - Create user
+- `PUT /api/users/{id}` - Update user
+- `PUT /api/users/{id}/password` - Change password
+- `GET /api/users/roles` - Get all roles
+- `POST /api/users/roles` - Create role
+
+### 6. Metric Persistence to Time-Series Database
+
+Store metrics in InfluxDB for long-term analysis:
+
+```properties
+# InfluxDB Configuration
+influxdb.enabled=true
+influxdb.url=http://localhost:8086
+influxdb.token=your-influxdb-token
+influxdb.org=dbmonitor
+influxdb.bucket=metrics
+```
+
+### 7. Query Plan Analysis
+
+Analyze database query execution plans:
+
+**API Endpoints:**
+- `POST /api/query-plans/analyze?connectionId={id}` - Analyze query plan
+- `GET /api/query-plans/full-table-scans` - Get queries with full table scans
+- `GET /api/query-plans/without-indexes` - Get queries without indexes
+- `GET /api/query-plans/recent?hours=24` - Get recent query plans
+
+### 8. Index Recommendations
+
+Get intelligent index recommendations to improve query performance:
+
+**API Endpoints:**
+- `POST /api/index-recommendations/generate/{connectionId}` - Generate recommendations
+- `GET /api/index-recommendations/{connectionId}/pending` - Get pending recommendations
+- `POST /api/index-recommendations/{id}/apply` - Apply recommendation
+- `POST /api/index-recommendations/{id}/reject` - Reject recommendation
+- `GET /api/index-recommendations/applied` - Get applied recommendations
+
+### 9. Backup Monitoring
+
+Monitor database backup status:
+
+**API Endpoints:**
+- `GET /api/backup/check/{connectionId}` - Check backup status
+- `GET /api/backup/latest/{connectionId}` - Get latest backup status
+- `GET /api/backup/history/{connectionId}` - Get backup history
+- `GET /api/backup/failed` - Get failed backups
+- `GET /api/backup/old?days=7` - Get old backups
+
+### 10. Replication Lag Tracking
+
+Track database replication status and lag:
+
+**API Endpoints:**
+- `GET /api/replication/check/{connectionId}` - Check replication status
+- `GET /api/replication/latest/{connectionId}` - Get latest replication status
+- `GET /api/replication/history/{connectionId}` - Get replication history
+- `GET /api/replication/errors` - Get replication errors
+- `GET /api/replication/high-lag?lagThresholdSeconds=60` - Get high lag replicas
 
 ## License
 
@@ -367,4 +479,4 @@ For issues or questions, please refer to the code comments or Spring Boot docume
 
 ---
 
-**Built with Spring Boot 3.2.0, Thymeleaf, and Chart.js**
+**Built with Spring Boot 3.2.0, Thymeleaf, Chart.js, and Enterprise-Grade Monitoring Capabilities**
