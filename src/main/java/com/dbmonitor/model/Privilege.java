@@ -6,16 +6,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.HashSet;
-import java.util.Set;
-
 @Entity
-@Table(name = "roles")
+@Table(name = "privileges")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Role {
+public class Privilege {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,12 +23,6 @@ public class Role {
     
     private String description;
     
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-        name = "role_privileges",
-        joinColumns = @JoinColumn(name = "role_id"),
-        inverseJoinColumns = @JoinColumn(name = "privilege_id")
-    )
-    @Builder.Default
-    private Set<Privilege> privileges = new HashSet<>();
+    @Column(nullable = false)
+    private String category; // VIEW, MANAGE, ADMIN, etc.
 }

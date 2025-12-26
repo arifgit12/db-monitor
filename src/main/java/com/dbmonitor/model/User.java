@@ -33,11 +33,22 @@ public class User {
     
     private String phone;
     
-    private Boolean enabled;
+    @Builder.Default
+    private Boolean enabled = true;
+    
+    @Builder.Default
+    private Boolean accountLocked = false;
+    
+    @Builder.Default
+    private Integer failedLoginAttempts = 0;
+    
+    private LocalDateTime lockoutTime;
     
     private LocalDateTime createdAt;
     
     private LocalDateTime lastLogin;
+    
+    private String lastLoginIp;
     
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -45,5 +56,6 @@ public class User {
         joinColumns = @JoinColumn(name = "user_id"),
         inverseJoinColumns = @JoinColumn(name = "role_id")
     )
+    @Builder.Default
     private Set<Role> roles = new HashSet<>();
 }
