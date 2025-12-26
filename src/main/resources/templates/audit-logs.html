@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Audit Logs - DB Monitor</title>
+    <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta20/dist/css/tabler.min.css" rel="stylesheet"/>
+</head>
+<body>
+    <div class="page">
+        <div class="page-wrapper">
+            <div class="container-xl">
+                <h1>Audit Logs</h1>
+                <div class="card">
+                    <table class="table">
+                        <thead>
+                            <tr><th>Time</th><th>User</th><th>Action</th><th>IP</th><th>Status</th></tr>
+                        </thead>
+                        <tbody id="logsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta20/dist/js/tabler.min.js"></script>
+    <script>
+        async function loadLogs() {
+            const response = await fetch('/api/audit-logs/recent?hours=24');
+            const logs = await response.json();
+            document.getElementById('logsTable').innerHTML = logs.map(log => `
+                <tr>
+                    <td>${new Date(log.timestamp).toLocaleString()}</td>
+                    <td>${log.username}</td>
+                    <td>${log.action}</td>
+                    <td>${log.ipAddress || '-'}</td>
+                    <td><span class="badge ${log.status === 'SUCCESS' ? 'bg-success' : 'bg-danger'}">${log.status}</span></td>
+                </tr>
+            `).join('');
+        }
+        loadLogs();
+    </script>
+</body>
+</html>

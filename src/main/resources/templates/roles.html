@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Roles - DB Monitor</title>
+    <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta20/dist/css/tabler.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" rel="stylesheet"/>
+</head>
+<body>
+    <div class="page">
+        <div class="page-wrapper">
+            <div class="container-xl">
+                <div class="page-header">
+                    <h1>Roles & Privileges Management</h1>
+                    <button class="btn btn-primary" onclick="showAddRoleModal()">Add Role</button>
+                </div>
+                <div class="card">
+                    <table class="table">
+                        <thead>
+                            <tr><th>Role</th><th>Description</th><th>Privileges</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="rolesTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta20/dist/js/tabler.min.js"></script>
+    <script>
+        async function loadRoles() {
+            const response = await fetch('/api/roles');
+            const roles = await response.json();
+            document.getElementById('rolesTable').innerHTML = roles.map(role => `
+                <tr>
+                    <td>${role.name}</td>
+                    <td>${role.description}</td>
+                    <td>${role.privileges.map(p => p.name).join(', ')}</td>
+                    <td><button onclick="editRole(${role.id})">Edit</button></td>
+                </tr>
+            `).join('');
+        }
+        loadRoles();
+    </script>
+</body>
+</html>
