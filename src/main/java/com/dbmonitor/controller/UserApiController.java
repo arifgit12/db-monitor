@@ -3,11 +3,13 @@ package com.dbmonitor.controller;
 import com.dbmonitor.model.Role;
 import com.dbmonitor.model.User;
 import com.dbmonitor.service.UserService;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,6 +21,20 @@ public class UserApiController {
 
     @Autowired
     private UserService userService;
+    
+    @Data
+    public static class CreateUserRequest {
+        private String username;
+        private String password;
+        private String email;
+        private String phone;
+        private List<String> roles;
+    }
+    
+    @Data
+    public static class UpdateUserRolesRequest {
+        private List<String> roles;
+    }
 
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
@@ -40,16 +56,19 @@ public class UserApiController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createUser(@RequestBody Map<String, Object> request) {
+    public ResponseEntity<?> createUser(@RequestBody CreateUserRequest request) {
         try {
-            String username = (String) request.get("username");
-            String password = (String) request.get("password");
-            String email = (String) request.get("email");
-            String phone = (String) request.get("phone");
-            @SuppressWarnings("unchecked")
-            Set<String> roleNames = (Set<String>) request.get("roles");
+            Set<String> roleNames = request.getRoles() != null 
+                ? new HashSet<>(request.getRoles()) 
+                : new HashSet<>();
             
-            User user = userService.createUser(username, password, email, phone, roleNames);
+            User user = userService.createUser(
+                request.getUsername(), 
+                request.getPassword(), 
+                request.getEmail(), 
+                request.getPhone(), 
+                roleNames
+            );
             return ResponseEntity.ok(user);
         } catch (Exception e) {
             log.error("Error creating user", e);
@@ -77,9 +96,11 @@ public class UserApiController {
     @PutMapping("/{id}/roles")
     public ResponseEntity<?> updateUserRoles(
             @PathVariable Long id,
-            @RequestBody Map<String, Set<String>> request) {
+            @RequestBody UpdateUserRolesRequest request) {
         try {
-            Set<String> roleNames = request.get("roles");
+            Set<String> roleNames = request.getRoles() != null 
+                ? new HashSet<>(request.getRoles()) 
+                : new HashSet<>();
             userService.updateUserRoles(id, roleNames);
             return ResponseEntity.ok(Map.of("message", "User roles updated successfully"));
         } catch (Exception e) {
