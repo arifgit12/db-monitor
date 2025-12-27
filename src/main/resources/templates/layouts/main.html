@@ -147,11 +147,11 @@
                             </div>
                         </div>
                         <!-- Page actions -->
-                        <div class="col-auto ms-auto d-print-none" layout:fragment="page-actions">
+                        <div class="col-auto d-print-none" layout:fragment="page-actions">
                             <!-- Page actions will be inserted here -->
                         </div>
-                        <!-- User dropdown -->
-                        <div class="col-auto d-print-none" sec:authorize="isAuthenticated()">
+                        <!-- User dropdown and logout (shown when authenticated) -->
+                        <div class="col-auto ms-auto d-print-none" sec:authorize="isAuthenticated()">
                             <div class="btn-list">
                                 <div class="dropdown">
                                     <a href="#" class="btn btn-white dropdown-toggle" data-bs-toggle="dropdown">
@@ -176,7 +176,19 @@
                                         </a>
                                     </div>
                                 </div>
+                                <a href="/logout" class="btn btn-outline-danger">
+                                    <i class="ti ti-logout me-2"></i>
+                                    Logout
+                                </a>
                             </div>
+                        </div>
+
+                        <!-- Logout button (always visible for development) -->
+                        <div class="col-auto ms-auto d-print-none" sec:authorize="!isAuthenticated()">
+                            <a href="/login" class="btn btn-primary">
+                                <i class="ti ti-login me-2"></i>
+                                Login
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -208,7 +220,7 @@
                         <div class="col-12 col-lg-auto mt-3 mt-lg-0">
                             <ul class="list-inline list-inline-dots mb-0">
                                 <li class="list-inline-item">
-                                    &copy; 2025 DB Monitor. All rights reserved.
+                                    &copy; 2025 Arif Mondal. All rights reserved.
                                 </li>
                             </ul>
                         </div>
