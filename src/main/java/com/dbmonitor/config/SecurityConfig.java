@@ -119,13 +119,16 @@ public class SecurityConfig {
     public PersistentTokenRepository persistentTokenRepository() {
         JdbcTokenRepositoryImpl tokenRepository = new JdbcTokenRepositoryImpl();
         tokenRepository.setDataSource(dataSource);
-        // Note: The table will be created automatically by Hibernate or you can create it manually:
+        
+        // Note: The persistent_logins table is created by schema-sqlserver.sql
+        // Or you can manually create it:
         // CREATE TABLE persistent_logins (
         //     username VARCHAR(64) NOT NULL,
         //     series VARCHAR(64) PRIMARY KEY,
         //     token VARCHAR(64) NOT NULL,
-        //     last_used TIMESTAMP NOT NULL
+        //     last_used DATETIME2 NOT NULL
         // );
+        
         return tokenRepository;
     }
 }
