@@ -9,12 +9,7 @@ BEGIN
         token VARCHAR(64) NOT NULL,
         last_used DATETIME2 NOT NULL
     );
-END
-GO
-
--- Create index on username for faster lookup
-IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_persistent_logins_username' AND object_id = OBJECT_ID(N'[dbo].[persistent_logins]'))
-BEGIN
+    
+    -- Create index on username for faster lookup
     CREATE INDEX IX_persistent_logins_username ON persistent_logins(username);
 END
-GO
