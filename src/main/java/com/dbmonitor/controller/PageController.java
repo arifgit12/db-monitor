@@ -35,34 +35,4 @@ public class PageController {
         model.addAttribute("activePage", "security-monitor");
         return "security";
     }
-    
-    @GetMapping("/")
-    public String dashboard(Model model) {
-        model.addAttribute("activePage", "dashboard");
-        return "dashboard";
-    }
-    
-    @GetMapping("/connections")
-    public String connections(Model model) {
-        model.addAttribute("activePage", "db-connections");
-        return "connections";
-    }
-    
-    @GetMapping("/queries")
-    public String queries(Model model) {
-        model.addAttribute("activePage", "db-queries");
-        return "queries";
-    }
-    
-    @GetMapping("/performance")
-    public String performance(Model model) {
-        model.addAttribute("activePage", "db-performance");
-        return "performance";
-    }
-    
-    @GetMapping("/alerts")
-    public String alerts(Model model) {
-        model.addAttribute("activePage", "db-alerts");
-        return "alerts";
-    }
 }
