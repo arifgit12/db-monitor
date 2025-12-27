@@ -2,11 +2,13 @@ package com.dbmonitor.controller;
 
 import com.dbmonitor.model.Role;
 import com.dbmonitor.service.RoleService;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,6 +20,11 @@ public class RoleApiController {
 
     @Autowired
     private RoleService roleService;
+    
+    @Data
+    public static class PrivilegeIdsRequest {
+        private List<Long> privilegeIds;
+    }
 
     @GetMapping
     public ResponseEntity<List<Role>> getAllRoles() {
@@ -107,9 +114,27 @@ public class RoleApiController {
     @PutMapping("/{roleId}/privileges")
     public ResponseEntity<?> setRolePrivileges(
             @PathVariable Long roleId,
-            @RequestBody Map<String, Set<Long>> request) {
+            @RequestBody PrivilegeIdsRequest request) {
         try {
-            Set<Long> privilegeIds = request.get("privilegeIds");
+            Set<Long> privilegeIds = request.getPrivilegeIds() != null 
+                ? new HashSet<>(request.getPrivilegeIds()) 
+                : new HashSet<>();
+            Role role = roleService.setPrivileges(roleId, privilegeIds);
+            return ResponseEntity.ok(role);
+        } catch (Exception e) {
+            log.error("Error setting role privileges", e);
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+    
+    @PostMapping("/{roleId}/privileges")
+    public ResponseEntity<?> setRolePrivilegesPost(
+            @PathVariable Long roleId,
+            @RequestBody PrivilegeIdsRequest request) {
+        try {
+            Set<Long> privilegeIds = request.getPrivilegeIds() != null 
+                ? new HashSet<>(request.getPrivilegeIds()) 
+                : new HashSet<>();
             Role role = roleService.setPrivileges(roleId, privilegeIds);
             return ResponseEntity.ok(role);
         } catch (Exception e) {

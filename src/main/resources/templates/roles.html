@@ -329,7 +329,7 @@
                 // Assign privileges if any selected
                 if (selectedPrivileges.length > 0) {
                     await fetch(`/api/roles/${newRole.id}/privileges`, {
-                        method: 'PUT',
+                        method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ privilegeIds: selectedPrivileges })
                     });
@@ -384,7 +384,7 @@
 
                 // Update privileges
                 await fetch(`/api/roles/${roleId}/privileges`, {
-                    method: 'PUT',
+                    method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ privilegeIds: selectedPrivileges })
                 });
