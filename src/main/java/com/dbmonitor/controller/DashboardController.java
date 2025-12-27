@@ -36,6 +36,7 @@ public class DashboardController {
     @GetMapping("/")
     public String dashboard(@RequestParam(required = false) Long connectionId, Model model) {
         log.info("=== DASHBOARD REQUEST START ===");
+        model.addAttribute("activePage", "dashboard");
 
         // Log all connections in database
         List<DatabaseConnection> allConnections = connectionService.getAllConnections();
@@ -102,6 +103,7 @@ public class DashboardController {
 
     @GetMapping("/queries")
     public String queries(@RequestParam(required = false) Long connectionId, Model model) {
+        model.addAttribute("activePage", "db-queries");
         List<DatabaseConnection> activeConnections = connectionService.getActiveConnections();
 
         boolean noConnections = activeConnections.isEmpty();
@@ -138,6 +140,7 @@ public class DashboardController {
 
     @GetMapping("/alerts")
     public String alerts(Model model) {
+        model.addAttribute("activePage", "db-alerts");
         model.addAttribute("alerts", alertService.getAllAlerts());
         model.addAttribute("unacknowledgedCount", alertService.getUnacknowledgedCount());
         model.addAttribute("connections", connectionService.getActiveConnections());
@@ -146,6 +149,7 @@ public class DashboardController {
 
     @GetMapping("/connections")
     public String connections(@RequestParam(required = false) Long connectionId, Model model) {
+        model.addAttribute("activePage", "db-connections");
 
         List<DatabaseConnection> activeConnections = connectionService.getActiveConnections();
 
@@ -176,6 +180,7 @@ public class DashboardController {
 
     @GetMapping("/performance")
     public String performance(@RequestParam(required = false) Long connectionId, Model model) {
+        model.addAttribute("activePage", "db-performance");
         List<DatabaseConnection> activeConnections = connectionService.getActiveConnections();
 
         boolean noConnections = activeConnections.isEmpty();

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/main}">
+<head>
+    <title>Roles Management</title>
+</head>
+<body>
+    <!-- Page Title -->
+    <th:block layout:fragment="page-title">Roles & Privileges</th:block>
+
+    <!-- Page Subtitle -->
+    <th:block layout:fragment="page-subtitle">Manage roles and assign privileges</th:block>
+
+    <!-- Page Actions -->
+    <th:block layout:fragment="page-actions">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRoleModal">
+            <i class="ti ti-plus"></i> Add Role
+        </button>
+    </th:block>
+
+    <!-- Main Content -->
+    <div layout:fragment="content">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Roles</h3>
+                        <div class="ms-auto">
+                            <input type="text" class="form-control" id="searchInput" placeholder="Search roles...">
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Role Name</th>
+                                    <th>Description</th>
+                                    <th>Privileges Count</th>
+                                    <th>Privileges</th>
+                                    <th class="w-1">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rolesTableBody">
+                                <tr>
+                                    <td colspan="5" class="text-center">Loading roles...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Role Modal -->
+        <div class="modal fade" id="addRoleModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add New Role</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addRoleForm">
+                            <div class="mb-3">
+                                <label class="form-label required">Role Name</label>
+                                <input type="text" class="form-control" name="name" required placeholder="e.g., ROLE_DEVELOPER">
+                                <small class="form-hint">Must start with ROLE_ prefix</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-control" name="description" rows="2" placeholder="Brief description of the role"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Assign Privileges</label>
+                                <div id="addPrivilegesContainer" class="border rounded p-3" style="max-height: 400px; overflow-y: auto;">
+                                    <div class="text-center text-muted py-3">
+                                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                        Loading privileges...
+                                    </div>
+                                </div>
+                                <small class="form-hint">Select the privileges this role should have</small>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="saveRole()">
+                            <i class="ti ti-check"></i> Save Role
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Role Modal -->
+        <div class="modal fade" id="editRoleModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Role</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editRoleForm">
+                            <input type="hidden" name="roleId" id="editRoleId">
+                            <div class="mb-3">
+                                <label class="form-label">Role Name</label>
+                                <input type="text" class="form-control" name="name" id="editRoleName" readonly>
+                                <small class="form-hint">Role name cannot be changed</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-control" name="description" id="editRoleDescription" rows="2"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Assign Privileges</label>
+                                <div id="editPrivilegesContainer" class="border rounded p-3" style="max-height: 400px; overflow-y: auto;">
+                                    <div class="text-center text-muted py-3">
+                                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                        Loading privileges...
+                                    </div>
+                                </div>
+                                <small class="form-hint">Select the privileges this role should have</small>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="updateRole()">
+                            <i class="ti ti-check"></i> Update Role
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page JavaScript -->
+    <th:block layout:fragment="extra-js">
+        <script th:src="@{/js/roles.js}"></script>
+    </th:block>
+</body>
+</html>

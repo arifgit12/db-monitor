@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/main}">
+<head>
+    <title>User Management</title>
+</head>
+<body>
+    <!-- Page Title -->
+    <th:block layout:fragment="page-title">User Management</th:block>
+
+    <!-- Page Subtitle -->
+    <th:block layout:fragment="page-subtitle">Manage users and their access</th:block>
+
+    <!-- Page Actions -->
+    <th:block layout:fragment="page-actions">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+            <i class="ti ti-plus"></i> Add User
+        </button>
+    </th:block>
+
+    <!-- Main Content -->
+    <div layout:fragment="content">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Users</h3>
+                        <div class="ms-auto">
+                            <input type="text" class="form-control" id="searchInput" placeholder="Search users...">
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Roles</th>
+                                    <th>Status</th>
+                                    <th>Last Login</th>
+                                    <th class="w-1">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center">Loading users...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add User Modal -->
+        <div class="modal fade" id="addUserModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add New User</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addUserForm">
+                            <div class="mb-3">
+                                <label class="form-label required">Username</label>
+                                <input type="text" class="form-control" name="username" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label required">Password</label>
+                                <input type="password" class="form-control" name="password" required minlength="6">
+                                <small class="form-hint">Minimum 6 characters</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" name="email">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Phone</label>
+                                <input type="text" class="form-control" name="phone">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label required">Roles</label>
+                                <select class="form-select" name="roles" multiple required id="rolesSelect" size="5">
+                                    <!-- Populated dynamically -->
+                                </select>
+                                <small class="form-hint">Hold Ctrl/Cmd to select multiple roles</small>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="saveUser()">
+                            <i class="ti ti-check"></i> Save User
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit User Modal -->
+        <div class="modal fade" id="editUserModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit User</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editUserForm">
+                            <input type="hidden" name="userId" id="editUserId">
+                            <div class="mb-3">
+                                <label class="form-label">Username</label>
+                                <input type="text" class="form-control" name="username" id="editUsername" readonly>
+                                <small class="form-hint">Username cannot be changed</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" name="email" id="editEmail">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Phone</label>
+                                <input type="text" class="form-control" name="phone" id="editPhone">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label required">Roles</label>
+                                <select class="form-select" name="roles" multiple id="editRolesSelect" size="5">
+                                    <!-- Populated dynamically -->
+                                </select>
+                                <small class="form-hint">Hold Ctrl/Cmd to select multiple roles</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-check form-switch">
+                                    <input type="checkbox" class="form-check-input" name="enabled" id="editEnabled">
+                                    <span class="form-check-label">Account Enabled</span>
+                                </label>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="updateUser()">
+                            <i class="ti ti-check"></i> Update User
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page JavaScript -->
+    <th:block layout:fragment="extra-js">
+        <script th:src="@{/js/users.js}"></script>
+    </th:block>
+</body>
+</html>

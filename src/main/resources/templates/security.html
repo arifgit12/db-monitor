@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/main}">
+<head>
+    <title>Security Dashboard</title>
+</head>
+<body>
+    <!-- Page Title -->
+    <th:block layout:fragment="page-title">Security Dashboard</th:block>
+
+    <!-- Page Subtitle -->
+    <th:block layout:fragment="page-subtitle">Monitor security events and detect fraud</th:block>
+
+    <!-- Main Content -->
+    <div layout:fragment="content">
+        <!-- Security Metrics -->
+        <div class="row row-deck row-cards mb-3">
+            <div class="col-sm-6 col-lg-2">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="subheader">Total Attempts</div>
+                        </div>
+                        <div class="d-flex align-items-baseline">
+                            <div class="h1 mb-0 me-2" id="totalAttempts">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-2">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="subheader">Failed Attempts</div>
+                        </div>
+                        <div class="d-flex align-items-baseline">
+                            <div class="h1 mb-0 me-2 text-danger" id="failedAttempts">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-2">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="subheader">Failure Rate</div>
+                        </div>
+                        <div class="d-flex align-items-baseline">
+                            <div class="h1 mb-0 me-2" id="failureRate">0%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-2">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="subheader">Suspicious IPs</div>
+                        </div>
+                        <div class="d-flex align-items-baseline">
+                            <div class="h1 mb-0 me-2 text-warning" id="suspiciousIps">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-2">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="subheader">Locked Accounts</div>
+                        </div>
+                        <div class="d-flex align-items-baseline">
+                            <div class="h1 mb-0 me-2 text-danger" id="lockedAccounts">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-2">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="subheader">Unique Users</div>
+                        </div>
+                        <div class="d-flex align-items-baseline">
+                            <div class="h1 mb-0 me-2" id="uniqueUsers">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Login Attempts Table -->
+            <div class="col-lg-9">
+                <div class="card" id="attemptsCard">
+                    <div class="card-header">
+                        <h3 class="card-title">Recent Login Attempts (Last 24 Hours)</h3>
+                        <div class="ms-auto">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary filter-btn active" data-filter="all" onclick="filterAttempts('all')">All</button>
+                                <button class="btn btn-sm btn-outline-success filter-btn" data-filter="success" onclick="filterAttempts('success')">Success</button>
+                                <button class="btn btn-sm btn-outline-danger filter-btn" data-filter="failed" onclick="filterAttempts('failed')">Failed</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Username</th>
+                                    <th>IP Address</th>
+                                    <th>Browser/Device</th>
+                                    <th>Status</th>
+                                    <th>Reason</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attemptsTable">
+                                <tr>
+                                    <td colspan="6" class="text-center">Loading login attempts...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Suspicious IPs Sidebar -->
+            <div class="col-lg-3">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Suspicious IPs</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="suspiciousIpsList">
+                            <p class="text-muted text-center">No suspicious activity detected</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h3 class="card-title">Security Tips</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <i class="ti ti-shield-check text-success me-2"></i>
+                            <strong>Strong Passwords</strong>
+                            <p class="text-muted small mb-0">Use at least 8 characters</p>
+                        </div>
+                        <div class="mb-3">
+                            <i class="ti ti-lock text-primary me-2"></i>
+                            <strong>Account Lockout</strong>
+                            <p class="text-muted small mb-0">5 failed attempts = lock</p>
+                        </div>
+                        <div>
+                            <i class="ti ti-clock text-warning me-2"></i>
+                            <strong>Session Timeout</strong>
+                            <p class="text-muted small mb-0">30 minutes of inactivity</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page JavaScript -->
+    <th:block layout:fragment="extra-js">
+        <script th:src="@{/js/security.js}"></script>
+    </th:block>
+</body>
+</html>
