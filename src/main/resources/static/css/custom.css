@@ -24,6 +24,60 @@
     margin-right: 0.5rem;
 }
 
+/* Collapsible Navigation Menus */
+.navbar-nav .dropdown-menu {
+    position: static;
+    float: none;
+    width: auto;
+    margin-top: 0;
+    background-color: transparent;
+    border: 0;
+    box-shadow: none;
+    padding: 0 0 0 1.5rem;
+}
+
+.navbar-nav .dropdown-toggle {
+    position: relative;
+}
+
+.navbar-nav .dropdown-toggle::after {
+    content: "\f0d7";
+    font-family: "tabler-icons";
+    border: 0;
+    margin-left: auto;
+    transition: transform 0.2s ease;
+    font-size: 0.875rem;
+}
+
+.navbar-nav .dropdown-toggle[aria-expanded="true"]::after {
+    transform: rotate(-180deg);
+}
+
+.navbar-nav .dropdown-item {
+    padding: 0.5rem 1rem;
+    color: rgba(255, 255, 255, 0.7);
+    border-radius: 4px;
+    margin-bottom: 2px;
+}
+
+.navbar-nav .dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.navbar-nav .dropdown-item.active {
+    background-color: rgba(32, 107, 196, 0.15);
+    color: #fff;
+}
+
+.navbar-nav .collapse {
+    transition: height 0.35s ease;
+}
+
+.navbar-nav .collapsing {
+    transition: height 0.35s ease;
+}
+
 /* ============================================
    METRIC CARDS & DASHBOARDS
    ============================================ */

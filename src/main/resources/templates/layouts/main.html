@@ -63,81 +63,69 @@
                         
                         <!-- Database Monitoring Section -->
                         <li class="nav-item dropdown" th:classappend="${#strings.startsWith(activePage, 'db-') ? 'active' : ''}">
-                            <a class="nav-link dropdown-toggle" href="#navbar-monitoring" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" aria-expanded="false">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#navbar-monitoring" aria-expanded="false">
                                 <span class="nav-link-icon d-md-none d-lg-inline-block">
                                     <i class="ti ti-database"></i>
                                 </span>
                                 <span class="nav-link-title">Database Monitoring</span>
                             </a>
-                            <div class="dropdown-menu">
-                                <div class="dropdown-menu-columns">
-                                    <div class="dropdown-menu-column">
-                                        <a class="dropdown-item" href="/connections" th:classappend="${#strings.equals(activePage, 'db-connections') ? 'active' : ''}">
-                                            <i class="ti ti-plug me-2"></i>
-                                            Connections
-                                        </a>
-                                        <a class="dropdown-item" href="/queries" th:classappend="${#strings.equals(activePage, 'db-queries') ? 'active' : ''}">
-                                            <i class="ti ti-code me-2"></i>
-                                            Queries
-                                        </a>
-                                        <a class="dropdown-item" href="/performance" th:classappend="${#strings.equals(activePage, 'db-performance') ? 'active' : ''}">
-                                            <i class="ti ti-chart-line me-2"></i>
-                                            Performance
-                                        </a>
-                                        <a class="dropdown-item" href="/alerts" th:classappend="${#strings.equals(activePage, 'db-alerts') ? 'active' : ''}">
-                                            <i class="ti ti-bell me-2"></i>
-                                            Alerts
-                                        </a>
-                                    </div>
-                                </div>
+                            <div class="dropdown-menu collapse" id="navbar-monitoring" th:classappend="${#strings.startsWith(activePage, 'db-') ? 'show' : ''}">
+                                <a class="dropdown-item" href="/connections" th:classappend="${#strings.equals(activePage, 'db-connections') ? 'active' : ''}">
+                                    <i class="ti ti-plug me-2"></i>
+                                    Connections
+                                </a>
+                                <a class="dropdown-item" href="/queries" th:classappend="${#strings.equals(activePage, 'db-queries') ? 'active' : ''}">
+                                    <i class="ti ti-code me-2"></i>
+                                    Queries
+                                </a>
+                                <a class="dropdown-item" href="/performance" th:classappend="${#strings.equals(activePage, 'db-performance') ? 'active' : ''}">
+                                    <i class="ti ti-chart-line me-2"></i>
+                                    Performance
+                                </a>
+                                <a class="dropdown-item" href="/alerts" th:classappend="${#strings.equals(activePage, 'db-alerts') ? 'active' : ''}">
+                                    <i class="ti ti-bell me-2"></i>
+                                    Alerts
+                                </a>
                             </div>
                         </li>
                         
                         <!-- User Management Section -->
                         <li class="nav-item dropdown" sec:authorize="hasAnyAuthority('ADMIN_USERS', 'ADMIN_ROLES')" th:classappend="${#strings.startsWith(activePage, 'user-') ? 'active' : ''}">
-                            <a class="nav-link dropdown-toggle" href="#navbar-users" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" aria-expanded="false">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#navbar-users" aria-expanded="false">
                                 <span class="nav-link-icon d-md-none d-lg-inline-block">
                                     <i class="ti ti-users"></i>
                                 </span>
                                 <span class="nav-link-title">User Management</span>
                             </a>
-                            <div class="dropdown-menu">
-                                <div class="dropdown-menu-columns">
-                                    <div class="dropdown-menu-column">
-                                        <a class="dropdown-item" href="/users" th:classappend="${#strings.equals(activePage, 'user-users') ? 'active' : ''}" sec:authorize="hasAuthority('ADMIN_USERS')">
-                                            <i class="ti ti-user me-2"></i>
-                                            Users
-                                        </a>
-                                        <a class="dropdown-item" href="/roles" th:classappend="${#strings.equals(activePage, 'user-roles') ? 'active' : ''}" sec:authorize="hasAuthority('ADMIN_ROLES')">
-                                            <i class="ti ti-shield me-2"></i>
-                                            Roles & Privileges
-                                        </a>
-                                    </div>
-                                </div>
+                            <div class="dropdown-menu collapse" id="navbar-users" th:classappend="${#strings.startsWith(activePage, 'user-') ? 'show' : ''}">
+                                <a class="dropdown-item" href="/users" th:classappend="${#strings.equals(activePage, 'user-users') ? 'active' : ''}" sec:authorize="hasAuthority('ADMIN_USERS')">
+                                    <i class="ti ti-user me-2"></i>
+                                    Users
+                                </a>
+                                <a class="dropdown-item" href="/roles" th:classappend="${#strings.equals(activePage, 'user-roles') ? 'active' : ''}" sec:authorize="hasAuthority('ADMIN_ROLES')">
+                                    <i class="ti ti-shield me-2"></i>
+                                    Roles & Privileges
+                                </a>
                             </div>
                         </li>
                         
                         <!-- Security Section -->
                         <li class="nav-item dropdown" sec:authorize="hasAnyAuthority('VIEW_AUDIT_LOGS', 'ADMIN_SECURITY')" th:classappend="${#strings.startsWith(activePage, 'security-') ? 'active' : ''}">
-                            <a class="nav-link dropdown-toggle" href="#navbar-security" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" aria-expanded="false">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#navbar-security" aria-expanded="false">
                                 <span class="nav-link-icon d-md-none d-lg-inline-block">
                                     <i class="ti ti-lock"></i>
                                 </span>
                                 <span class="nav-link-title">Security</span>
                             </a>
-                            <div class="dropdown-menu">
-                                <div class="dropdown-menu-columns">
-                                    <div class="dropdown-menu-column">
-                                        <a class="dropdown-item" href="/audit-logs" th:classappend="${#strings.equals(activePage, 'security-audit') ? 'active' : ''}" sec:authorize="hasAuthority('VIEW_AUDIT_LOGS')">
-                                            <i class="ti ti-file-text me-2"></i>
-                                            Audit Logs
-                                        </a>
-                                        <a class="dropdown-item" href="/security" th:classappend="${#strings.equals(activePage, 'security-monitor') ? 'active' : ''}" sec:authorize="hasAuthority('ADMIN_SECURITY')">
-                                            <i class="ti ti-shield-check me-2"></i>
-                                            Security Dashboard
-                                        </a>
-                                    </div>
-                                </div>
+                            <div class="dropdown-menu collapse" id="navbar-security" th:classappend="${#strings.startsWith(activePage, 'security-') ? 'show' : ''}">
+                                <a class="dropdown-item" href="/audit-logs" th:classappend="${#strings.equals(activePage, 'security-audit') ? 'active' : ''}" sec:authorize="hasAuthority('VIEW_AUDIT_LOGS')">
+                                    <i class="ti ti-file-text me-2"></i>
+                                    Audit Logs
+                                </a>
+                                <a class="dropdown-item" href="/security" th:classappend="${#strings.equals(activePage, 'security-monitor') ? 'active' : ''}" sec:authorize="hasAuthority('ADMIN_SECURITY')">
+                                    <i class="ti ti-shield-check me-2"></i>
+                                    Security Dashboard
+                                </a>
                             </div>
                         </li>
                     </ul>
