@@ -1,42 +1,115 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/main}">
 <head>
-    <meta charset="UTF-8">
-    <title>Audit Logs - DB Monitor</title>
-    <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta20/dist/css/tabler.min.css" rel="stylesheet"/>
+    <title>Audit Logs</title>
 </head>
 <body>
-    <div class="page">
-        <div class="page-wrapper">
-            <div class="container-xl">
-                <h1>Audit Logs</h1>
+    <!-- Page Title -->
+    <th:block layout:fragment="page-title">Audit Logs</th:block>
+
+    <!-- Page Subtitle -->
+    <th:block layout:fragment="page-subtitle">View and monitor system activity logs</th:block>
+
+    <!-- Page Actions -->
+    <th:block layout:fragment="page-actions">
+        <button class="btn btn-primary" onclick="exportLogs()">
+            <i class="ti ti-download"></i> Export CSV
+        </button>
+    </th:block>
+
+    <!-- Main Content -->
+    <div layout:fragment="content">
+        <!-- Statistics Cards -->
+        <div class="row row-deck row-cards mb-3">
+            <div class="col-sm-6 col-lg-3">
                 <div class="card">
-                    <table class="table">
-                        <thead>
-                            <tr><th>Time</th><th>User</th><th>Action</th><th>IP</th><th>Status</th></tr>
-                        </thead>
-                        <tbody id="logsTable"></tbody>
-                    </table>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="subheader">Total Logs</div>
+                        </div>
+                        <div class="h1 mb-0" id="totalLogs">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="subheader">Successful</div>
+                        </div>
+                        <div class="h1 mb-0 text-success" id="successfulLogs">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="subheader">Failed</div>
+                        </div>
+                        <div class="h1 mb-0 text-danger" id="failedLogs">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="subheader">Success Rate</div>
+                        </div>
+                        <div class="h1 mb-0" id="successRate">0%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audit Logs Table -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card" id="logsCard">
+                    <div class="card-header">
+                        <h3 class="card-title">Recent Activity (Last 24 Hours)</h3>
+                        <div class="ms-auto">
+                            <div class="btn-group me-2">
+                                <button class="btn btn-sm btn-outline-primary filter-btn active" data-filter="all">All</button>
+                                <button class="btn btn-sm btn-outline-success filter-btn" data-filter="success">Success</button>
+                                <button class="btn btn-sm btn-outline-danger filter-btn" data-filter="failure">Failures</button>
+                                <button class="btn btn-sm btn-outline-secondary filter-btn" data-filter="login">Login</button>
+                                <button class="btn btn-sm btn-outline-secondary filter-btn" data-filter="user">User Mgmt</button>
+                            </div>
+                            <input type="text" class="form-control" id="searchInput" placeholder="Search logs..." style="width: 250px; display: inline-block;">
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>User</th>
+                                    <th>Action</th>
+                                    <th>Description</th>
+                                    <th>IP Address</th>
+                                    <th>Browser</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logsTable">
+                                <tr>
+                                    <td colspan="7" class="text-center">Loading audit logs...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta20/dist/js/tabler.min.js"></script>
-    <script>
-        async function loadLogs() {
-            const response = await fetch('/api/audit-logs/recent?hours=24');
-            const logs = await response.json();
-            document.getElementById('logsTable').innerHTML = logs.map(log => `
-                <tr>
-                    <td>${new Date(log.timestamp).toLocaleString()}</td>
-                    <td>${log.username}</td>
-                    <td>${log.action}</td>
-                    <td>${log.ipAddress || '-'}</td>
-                    <td><span class="badge ${log.status === 'SUCCESS' ? 'bg-success' : 'bg-danger'}">${log.status}</span></td>
-                </tr>
-            `).join('');
-        }
-        loadLogs();
-    </script>
+
+    <!-- Page JavaScript -->
+    <th:block layout:fragment="extra-js">
+        <script th:src="@{/js/audit-logs.js}"></script>
+    </th:block>
 </body>
 </html>

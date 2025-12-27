@@ -1,306 +1,162 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/main}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${isEdit ? 'Edit Connection' : 'New Connection'} + ' - Database Performance Monitor'">
-        Connection Form
-    </title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .header {
-            background: white;
-            padding: 20px 30px;
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
-        }
-
-        .header h1 {
-            color: #667eea;
-            font-size: 28px;
-        }
-
-        .form-container {
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-
-        .form-title {
-            font-size: 24px;
-            color: #333;
-            margin-bottom: 30px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .form-label .required {
-            color: #dc3545;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: all 0.3s;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 15px;
-        }
-
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .checkbox-group input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-        }
-
-        .form-actions {
-            display: flex;
-            gap: 15px;
-            margin-top: 30px;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .btn-primary {
-            background: #667eea;
-            color: white;
-            flex: 1;
-        }
-
-        .btn-primary:hover {
-            background: #5568d3;
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-
-        .help-text {
-            font-size: 13px;
-            color: #666;
-            margin-top: 5px;
-        }
-
-        .section-divider {
-            border: none;
-            border-top: 2px solid #e9ecef;
-            margin: 30px 0;
-        }
-
-        .section-subtitle {
-            font-size: 18px;
-            font-weight: 600;
-            color: #667eea;
-            margin-bottom: 15px;
-        }
-    </style>
+    <title th:text="${isEdit ? 'Edit Connection' : 'New Connection'}">Connection Form</title>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📊 Database Performance Monitor</h1>
-        </div>
+    <!-- Page Title -->
+    <th:block layout:fragment="page-title" th:text="${isEdit ? 'Edit Database Connection' : 'Add New Database Connection'}">
+        Add New Database Connection
+    </th:block>
 
-        <div class="form-container">
-            <h2 class="form-title" th:text="${isEdit ? 'Edit Database Connection' : 'Add New Database Connection'}">
-                Add New Database Connection
-            </h2>
+    <!-- Page Subtitle -->
+    <th:block layout:fragment="page-subtitle">
+        Configure database connection settings and pool parameters
+    </th:block>
 
-            <form th:action="@{/connections-config/save}" th:object="${connection}" method="post">
-                <input type="hidden" th:field="*{id}">
+    <!-- Main Content -->
+    <div layout:fragment="content">
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                <div class="card">
+                    <div class="card-body">
+                        <form th:action="@{/connections-config/save}" th:object="${connection}" method="post">
+                            <input type="hidden" th:field="*{id}">
 
-                <!-- Basic Information -->
-                <div class="form-group">
-                    <label class="form-label">
-                        Connection Name <span class="required">*</span>
-                    </label>
-                    <input type="text" class="form-control" th:field="*{connectionName}" 
-                           placeholder="e.g., Production DB, Staging DB" required>
-                    <div class="help-text">A unique name to identify this connection</div>
-                </div>
+                            <!-- Basic Information Section -->
+                            <h3 class="mb-3">Basic Information</h3>
 
-                <div class="form-group">
-                    <label class="form-label">
-                        Database Type <span class="required">*</span>
-                    </label>
-                    <select class="form-control" th:field="*{databaseType}" required>
-                        <option value="">-- Select Database Type --</option>
-                        <option value="MYSQL">MySQL</option>
-                        <option value="POSTGRESQL">PostgreSQL</option>
-                        <option value="H2">H2</option>
-                        <option value="ORACLE">Oracle</option>
-                        <option value="SQLSERVER">SQL Server</option>
-                    </select>
-                </div>
+                            <div class="mb-3">
+                                <label class="form-label required">Connection Name</label>
+                                <input type="text" class="form-control" th:field="*{connectionName}"
+                                       placeholder="e.g., Production DB, Staging DB" required>
+                                <small class="form-hint">A unique name to identify this connection</small>
+                            </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">
-                            Host <span class="required">*</span>
-                        </label>
-                        <input type="text" class="form-control" th:field="*{host}" 
-                               placeholder="localhost or IP address" required>
+                            <div class="mb-3">
+                                <label class="form-label required">Database Type</label>
+                                <select class="form-select" th:field="*{databaseType}" required>
+                                    <option value="">-- Select Database Type --</option>
+                                    <option value="MYSQL">MySQL</option>
+                                    <option value="POSTGRESQL">PostgreSQL</option>
+                                    <option value="H2">H2</option>
+                                    <option value="ORACLE">Oracle</option>
+                                    <option value="SQLSERVER">SQL Server</option>
+                                </select>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="mb-3">
+                                        <label class="form-label required">Host</label>
+                                        <input type="text" class="form-control" th:field="*{host}"
+                                               placeholder="localhost or IP address" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label required">Port</label>
+                                        <input type="number" class="form-control" th:field="*{port}"
+                                               placeholder="3306" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label required">Database Name</label>
+                                <input type="text" class="form-control" th:field="*{databaseName}"
+                                       placeholder="database name" required>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label required">Username</label>
+                                        <input type="text" class="form-control" th:field="*{username}"
+                                               placeholder="database username" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label required">Password</label>
+                                        <input type="password" class="form-control" th:field="*{password}"
+                                               placeholder="database password" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-control" th:field="*{description}" rows="3"
+                                          placeholder="Optional description for this connection"></textarea>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <!-- Connection Pool Settings -->
+                            <h3 class="mb-3">Connection Pool Settings</h3>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Minimum Pool Size</label>
+                                        <input type="number" class="form-control" th:field="*{minPoolSize}"
+                                               placeholder="5" min="1">
+                                        <small class="form-hint">Minimum number of idle connections</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Maximum Pool Size</label>
+                                        <input type="number" class="form-control" th:field="*{maxPoolSize}"
+                                               placeholder="20" min="1">
+                                        <small class="form-hint">Maximum number of connections</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Connection Timeout (ms)</label>
+                                <input type="number" class="form-control" th:field="*{connectionTimeout}"
+                                       placeholder="30000" min="1000">
+                                <small class="form-hint">Maximum time to wait for a connection (milliseconds)</small>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <!-- Status Settings -->
+                            <h3 class="mb-3">Status</h3>
+
+                            <div class="mb-3">
+                                <label class="form-check">
+                                    <input type="checkbox" class="form-check-input" th:field="*{isActive}">
+                                    <span class="form-check-label">Active (Enable monitoring for this connection)</span>
+                                </label>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-check">
+                                    <input type="checkbox" class="form-check-input" th:field="*{isDefault}">
+                                    <span class="form-check-label">Set as Default Connection</span>
+                                </label>
+                            </div>
+
+                            <!-- Form Actions -->
+                            <div class="d-flex gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="ti ti-check me-2"></i>
+                                    <span th:text="${isEdit ? 'Update Connection' : 'Add Connection'}">Add Connection</span>
+                                </button>
+                                <a href="/connections-config" class="btn">
+                                    Cancel
+                                </a>
+                            </div>
+                        </form>
                     </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Port <span class="required">*</span>
-                        </label>
-                        <input type="number" class="form-control" th:field="*{port}" 
-                               placeholder="3306" required>
-                    </div>
                 </div>
-
-                <div class="form-group">
-                    <label class="form-label">
-                        Database Name <span class="required">*</span>
-                    </label>
-                    <input type="text" class="form-control" th:field="*{databaseName}" 
-                           placeholder="database name" required>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">
-                            Username <span class="required">*</span>
-                        </label>
-                        <input type="text" class="form-control" th:field="*{username}" 
-                               placeholder="database username" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Password <span class="required">*</span>
-                        </label>
-                        <input type="password" class="form-control" th:field="*{password}" 
-                               placeholder="database password" required>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Description</label>
-                    <textarea class="form-control" th:field="*{description}" rows="3"
-                              placeholder="Optional description for this connection"></textarea>
-                </div>
-
-                <hr class="section-divider">
-
-                <!-- Connection Pool Settings -->
-                <div class="section-subtitle">Connection Pool Settings</div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Minimum Pool Size</label>
-                        <input type="number" class="form-control" th:field="*{minPoolSize}" 
-                               placeholder="5" min="1">
-                        <div class="help-text">Minimum number of idle connections</div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Maximum Pool Size</label>
-                        <input type="number" class="form-control" th:field="*{maxPoolSize}" 
-                               placeholder="20" min="1">
-                        <div class="help-text">Maximum number of connections</div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Connection Timeout (ms)</label>
-                    <input type="number" class="form-control" th:field="*{connectionTimeout}" 
-                           placeholder="30000" min="1000">
-                    <div class="help-text">Maximum time to wait for a connection (milliseconds)</div>
-                </div>
-
-                <hr class="section-divider">
-
-                <!-- Status Settings -->
-                <div class="section-subtitle">Status</div>
-
-                <div class="form-group">
-                    <div class="checkbox-group">
-                        <input type="checkbox" th:field="*{isActive}" id="isActive">
-                        <label for="isActive" class="form-label" style="margin-bottom: 0;">
-                            Active (Enable monitoring for this connection)
-                        </label>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <div class="checkbox-group">
-                        <input type="checkbox" th:field="*{isDefault}" id="isDefault">
-                        <label for="isDefault" class="form-label" style="margin-bottom: 0;">
-                            Set as Default Connection
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Form Actions -->
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">
-                        <span th:text="${isEdit ? 'Update Connection' : 'Add Connection'}">Add Connection</span>
-                    </button>
-                    <a href="/connections-config" class="btn btn-secondary">Cancel</a>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </body>

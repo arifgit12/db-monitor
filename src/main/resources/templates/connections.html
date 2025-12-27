@@ -1,400 +1,195 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/main}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connection Pool - Database Performance Monitor</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .header {
-            background: white;
-            padding: 20px 30px;
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header h1 {
-            color: #667eea;
-            font-size: 28px;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 20px;
-        }
-
-        .nav-links a {
-            color: #667eea;
-            text-decoration: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            transition: all 0.3s;
-            font-weight: 500;
-        }
-
-        .nav-links a:hover, .nav-links a.active {
-            background: #667eea;
-            color: white;
-        }
-
-        .section {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
-        }
-
-        .section-title {
-            font-size: 24px;
-            color: #333;
-            margin-bottom: 20px;
-        }
-
-        .pool-visualization {
-            display: flex;
-            flex-direction: column;
-            gap: 30px;
-        }
-
-        .pool-bar-container {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 20px;
-        }
-
-        .pool-label {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .pool-bar {
-            height: 40px;
-            border-radius: 8px;
-            display: flex;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .pool-segment {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.3s;
-        }
-
-        .pool-active {
-            background: #667eea;
-        }
-
-        .pool-idle {
-            background: #4facfe;
-        }
-
-        .pool-available {
-            background: #e9ecef;
-            color: #666;
-        }
-
-        .pool-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .stat-box {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            border: 2px solid #e9ecef;
-        }
-
-        .stat-value {
-            font-size: 32px;
-            font-weight: bold;
-            color: #667eea;
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .info-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
-
-        .info-label {
-            color: #666;
-            font-weight: 600;
-        }
-
-        .info-value {
-            color: #333;
-            font-weight: 500;
-        }
-
-        .legend {
-            display: flex;
-            gap: 20px;
-            margin-top: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .legend-color {
-            width: 20px;
-            height: 20px;
-            border-radius: 4px;
-        }
-
-        .connection-tabs {
-            background: white;
-            padding: 10px 20px;
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
-            display: flex;
-            gap: 10px;
-            overflow-x: auto;
-        }
-
-        .tab {
-            padding: 10px 20px;
-            border-radius: 8px;
-            transition: all 0.3s;
-            white-space: nowrap;
-        }
-
-        .tab a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .tab:hover {
-            background: #f8f9fa;
-        }
-
-        .tab.active {
-            background: #667eea;
-        }
-
-        .tab.active a {
-            color: white;
-        }
-
-        .no-connections {
-            background: white;
-            padding: 60px;
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
-
-        .no-connections h2 {
-            color: #333;
-            margin-bottom: 15px;
-        }
-
-        .no-connections p {
-            color: #666;
-            margin-bottom: 20px;
-        }
-
-        .btn-primary {
-            background: #667eea;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            text-decoration: none;
-            display: inline-block;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .btn-primary:hover {
-            background: #5568d3;
-        }
-    </style>
+    <title>Connection Pool</title>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📊 Database Performance Monitor</h1>
-            <div class="nav-links">
-                <a href="/">Dashboard</a>
-                <a href="/performance">Performance</a>
-                <a href="/queries">Queries</a>
-                <a href="/connections" class="active">Connection Pool</a>
-                <a href="/alerts">Alerts</a>
-                <a href="/connections-config">Configure</a>
-            </div>
-        </div>
+    <!-- Page Title -->
+    <th:block layout:fragment="page-title">Connection Pool Status</th:block>
 
+    <!-- Page Subtitle -->
+    <th:block layout:fragment="page-subtitle">Monitor database connection pool utilization</th:block>
+
+    <!-- Main Content -->
+    <div layout:fragment="content">
         <!-- No Connections Message -->
-        <div th:if="${noConnections}" class="no-connections">
-            <h2>No Database Connections Configured</h2>
-            <p>Please add a database connection to start monitoring</p>
-            <br>
-            <a href="/connections-config/new" class="btn btn-primary">Add Connection</a>
-        </div>
-
-        <!-- Connection Tabs -->
-        <div th:if="${!noConnections}" class="connection-tabs">
-            <div th:each="conn : ${connections}" 
-                 class="tab"
-                 th:classappend="${conn.id == selectedConnection.id ? 'active' : ''}">
-                <a th:href="@{/connections(connectionId=${conn.id})}" th:text="${conn.connectionName}">Connection Name</a>
+        <div th:if="${noConnections}" class="dashboard-empty-state">
+            <div class="dashboard-empty-state-icon">
+                <i class="ti ti-database-off"></i>
             </div>
+            <h2 class="dashboard-empty-state-title">No Database Connections</h2>
+            <p class="dashboard-empty-state-text">
+                Please add a database connection to start monitoring
+            </p>
+            <a href="/connections-config/new" class="btn btn-primary">
+                <i class="ti ti-plus"></i> Add Connection
+            </a>
         </div>
 
-        <div th:if="${!noConnections}" class="section">
-            <h2 class="section-title">🔗 Connection Pool Status</h2>
-            
-            <div class="pool-visualization">
-                <div class="pool-bar-container">
-                    <div class="pool-label">Connection Pool Utilization</div>
-                    <div class="pool-bar">
-                        <div class="pool-segment pool-active" 
-                             th:style="'width: ' + ${currentMetrics.activeConnections * 100.0 / currentMetrics.maxConnections} + '%'"
-                             th:text="${currentMetrics.activeConnections} + ' Active'">
-                            5 Active
+        <!-- Connection Pool Content -->
+        <div th:if="${!noConnections}">
+            <!-- Connection Tabs -->
+            <div class="dashboard-connection-tabs">
+                <a th:each="conn : ${connections}"
+                   th:href="@{/connections(connectionId=${conn.id})}"
+                   class="dashboard-connection-tab"
+                   th:classappend="${conn.id == selectedConnection.id ? 'active' : ''}">
+                    <i class="ti ti-database"></i>
+                    <span th:text="${conn.connectionName}">Connection</span>
+                </a>
+            </div>
+
+            <!-- No Metrics Message -->
+            <div th:if="${currentMetrics == null}" class="alert alert-warning">
+                <i class="ti ti-alert-triangle me-2"></i>
+                Unable to load metrics for this connection. Please check if the connection is active and configured correctly.
+            </div>
+
+            <!-- Pool Visualization Card -->
+            <div th:if="${currentMetrics != null}" class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="ti ti-link me-2"></i>Connection Pool Utilization</h3>
                         </div>
-                        <div class="pool-segment pool-idle" 
-                             th:style="'width: ' + ${currentMetrics.idleConnections * 100.0 / currentMetrics.maxConnections} + '%'"
-                             th:text="${currentMetrics.idleConnections} + ' Idle'">
-                            5 Idle
-                        </div>
-                        <div class="pool-segment pool-available" 
-                             th:style="'width: ' + ${(currentMetrics.maxConnections - currentMetrics.totalConnections) * 100.0 / currentMetrics.maxConnections} + '%'"
-                             th:text="${currentMetrics.maxConnections - currentMetrics.totalConnections} + ' Available'">
-                            10 Available
+                        <div class="card-body">
+                            <!-- Pool Progress Bar -->
+                            <div class="mb-3">
+                                <div class="progress progress-separated mb-3" style="height: 40px;">
+                                    <div class="progress-bar bg-primary" role="progressbar"
+                                         th:style="'width: ' + ${currentMetrics.activeConnections * 100.0 / currentMetrics.maxConnections} + '%'"
+                                         th:attr="aria-valuenow=${currentMetrics.activeConnections},aria-valuemax=${currentMetrics.maxConnections}"
+                                         aria-valuemin="0">
+                                        <span th:text="${currentMetrics.activeConnections} + ' Active'">Active</span>
+                                    </div>
+                                    <div class="progress-bar bg-success" role="progressbar"
+                                         th:style="'width: ' + ${currentMetrics.idleConnections * 100.0 / currentMetrics.maxConnections} + '%'">
+                                        <span th:text="${currentMetrics.idleConnections} + ' Idle'">Idle</span>
+                                    </div>
+                                    <div class="progress-bar bg-light text-dark" role="progressbar"
+                                         th:style="'width: ' + ${(currentMetrics.maxConnections - currentMetrics.totalConnections) * 100.0 / currentMetrics.maxConnections} + '%'">
+                                        <span th:text="${currentMetrics.maxConnections - currentMetrics.totalConnections} + ' Available'">Available</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Legend -->
+                            <div class="d-flex gap-3 mb-4">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-primary me-2"></span>
+                                    <span class="text-muted">Active Connections</span>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-success me-2"></span>
+                                    <span class="text-muted">Idle Connections</span>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-light me-2"></span>
+                                    <span class="text-muted">Available Slots</span>
+                                </div>
+                            </div>
+
+                            <!-- Pool Statistics -->
+                            <div class="row row-cards">
+                                <div class="col-sm-6 col-lg-3">
+                                    <div class="card">
+                                        <div class="card-body text-center">
+                                            <div class="display-6 mb-2 text-primary" th:text="${currentMetrics.activeConnections}">0</div>
+                                            <div class="text-muted">Active Connections</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 col-lg-3">
+                                    <div class="card">
+                                        <div class="card-body text-center">
+                                            <div class="display-6 mb-2 text-success" th:text="${currentMetrics.idleConnections}">0</div>
+                                            <div class="text-muted">Idle Connections</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 col-lg-3">
+                                    <div class="card">
+                                        <div class="card-body text-center">
+                                            <div class="display-6 mb-2 text-info" th:text="${currentMetrics.totalConnections}">0</div>
+                                            <div class="text-muted">Total Connections</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 col-lg-3">
+                                    <div class="card">
+                                        <div class="card-body text-center">
+                                            <div class="display-6 mb-2 text-warning" th:text="${currentMetrics.waitingThreads}">0</div>
+                                            <div class="text-muted">Waiting Threads</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    
-                    <div class="legend">
-                        <div class="legend-item">
-                            <div class="legend-color pool-active"></div>
-                            <span>Active Connections</span>
+                </div>
+            </div>
+
+            <!-- Pool Configuration Card -->
+            <div th:if="${currentMetrics != null}" class="row mt-3">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="ti ti-settings me-2"></i>Pool Configuration</h3>
                         </div>
-                        <div class="legend-item">
-                            <div class="legend-color pool-idle"></div>
-                            <span>Idle Connections</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color pool-available"></div>
-                            <span>Available Slots</span>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Maximum Pool Size</label>
+                                        <div class="fw-bold" th:text="${currentMetrics.maxConnections}">20</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Pool Usage</label>
+                                        <div class="fw-bold">
+                                            <span th:text="${#numbers.formatDecimal(currentMetrics.connectionUsagePercent, 1, 1)}">50</span>%
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Database Type</label>
+                                        <div class="fw-bold" th:text="${currentMetrics.databaseType}">H2</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Database Version</label>
+                                        <div class="fw-bold" th:text="${currentMetrics.databaseVersion}">2.1.214</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Connection Status</label>
+                                        <div>
+                                            <span class="badge"
+                                                  th:classappend="${currentMetrics.databaseStatus == 'CONNECTED' ? 'bg-success' : 'bg-danger'}"
+                                                  th:text="${currentMetrics.databaseStatus}">CONNECTED</span>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Uptime</label>
+                                        <div class="fw-bold">
+                                            <span th:text="${currentMetrics.uptime / 1000 / 60}">5</span> minutes
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <div class="pool-stats">
-                <div class="stat-box">
-                    <div class="stat-value" th:text="${currentMetrics.activeConnections}">5</div>
-                    <div class="stat-label">Active Connections</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-value" th:text="${currentMetrics.idleConnections}">5</div>
-                    <div class="stat-label">Idle Connections</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-value" th:text="${currentMetrics.totalConnections}">10</div>
-                    <div class="stat-label">Total Connections</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-value" th:text="${currentMetrics.waitingThreads}">0</div>
-                    <div class="stat-label">Waiting Threads</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2 class="section-title">⚙️ Pool Configuration</h2>
-            
-            <div class="info-grid">
-                <div class="info-item">
-                    <span class="info-label">Maximum Pool Size</span>
-                    <span class="info-value" th:text="${currentMetrics.maxConnections}">20</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Pool Usage</span>
-                    <span class="info-value">
-                        <span th:text="${#numbers.formatDecimal(currentMetrics.connectionUsagePercent, 1, 1)}">50</span>%
-                    </span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Database Type</span>
-                    <span class="info-value" th:text="${currentMetrics.databaseType}">H2</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Database Version</span>
-                    <span class="info-value" th:text="${currentMetrics.databaseVersion}">2.1.214</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Connection Status</span>
-                    <span class="info-value" th:text="${currentMetrics.databaseStatus}">CONNECTED</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Uptime</span>
-                    <span class="info-value">
-                        <span th:text="${currentMetrics.uptime / 1000 / 60}">5</span> minutes
-                    </span>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        // Auto-refresh every 5 seconds
-        setTimeout(() => location.reload(), 5000);
-    </script>
+    <!-- Page JavaScript -->
+    <th:block layout:fragment="extra-js">
+        <script>
+            // Auto-refresh every 5 seconds
+            setTimeout(() => location.reload(), 5000);
+        </script>
+    </th:block>
 </body>
 </html>

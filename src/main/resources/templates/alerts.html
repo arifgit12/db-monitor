@@ -1,347 +1,143 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/main}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alerts - Database Performance Monitor</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .header {
-            background: white;
-            padding: 20px 30px;
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header h1 {
-            color: #667eea;
-            font-size: 28px;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 20px;
-        }
-
-        .nav-links a {
-            color: #667eea;
-            text-decoration: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            transition: all 0.3s;
-            font-weight: 500;
-        }
-
-        .nav-links a:hover, .nav-links a.active {
-            background: #667eea;
-            color: white;
-        }
-
-        .section {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .section-title {
-            font-size: 24px;
-            color: #333;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #5568d3;
-        }
-
-        .alert-card {
-            border-left: 4px solid;
-            padding: 20px;
-            margin-bottom: 15px;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            transition: all 0.3s;
-        }
-
-        .alert-card:hover {
-            transform: translateX(5px);
-        }
-
-        .alert-critical {
-            border-color: #dc3545;
-            background: #f8d7da;
-        }
-
-        .alert-warning {
-            border-color: #ffc107;
-            background: #fff3cd;
-        }
-
-        .alert-info {
-            border-color: #17a2b8;
-            background: #d1ecf1;
-        }
-
-        .alert-content {
-            flex: 1;
-        }
-
-        .alert-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .alert-type {
-            font-weight: 600;
-            font-size: 16px;
-            color: #333;
-        }
-
-        .alert-severity {
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .severity-critical {
-            background: #dc3545;
-            color: white;
-        }
-
-        .severity-warning {
-            background: #ffc107;
-            color: #333;
-        }
-
-        .severity-info {
-            background: #17a2b8;
-            color: white;
-        }
-
-        .alert-message {
-            color: #666;
-            margin-bottom: 10px;
-        }
-
-        .alert-meta {
-            font-size: 13px;
-            color: #999;
-        }
-
-        .alert-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 14px;
-        }
-
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #218838;
-        }
-
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #c82333;
-        }
-
-        .acknowledged {
-            opacity: 0.6;
-        }
-
-        .acknowledged .alert-card {
-            background: #e9ecef;
-        }
-
-        .no-data {
-            text-align: center;
-            padding: 40px;
-            color: #999;
-            font-size: 16px;
-        }
-
-        .stats-box {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: flex;
-            gap: 30px;
-        }
-
-        .stat-item {
-            flex: 1;
-        }
-
-        .stat-value {
-            font-size: 28px;
-            font-weight: bold;
-            color: #667eea;
-        }
-
-        .stat-label {
-            color: #666;
-            font-size: 14px;
-        }
-    </style>
+    <title>System Alerts</title>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📊 Database Performance Monitor</h1>
-            <div class="nav-links">
-                <a href="/">Dashboard</a>
-                <a href="/performance">Performance</a>
-                <a href="/queries">Queries</a>
-                <a href="/connections">Connection Pool</a>
-                <a href="/alerts" class="active">Alerts</a>
-                <a href="/connections-config">Configure</a>
+    <!-- Page Title -->
+    <th:block layout:fragment="page-title">System Alerts</th:block>
+
+    <!-- Page Subtitle -->
+    <th:block layout:fragment="page-subtitle">Monitor and manage database alerts and warnings</th:block>
+
+    <!-- Page Actions -->
+    <th:block layout:fragment="page-actions">
+        <button class="btn btn-primary" onclick="acknowledgeAll()">
+            <i class="ti ti-check-all"></i> Acknowledge All
+        </button>
+    </th:block>
+
+    <!-- Main Content -->
+    <div layout:fragment="content">
+        <!-- Statistics Cards -->
+        <div class="row row-cards mb-3">
+            <div class="col-sm-6">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <div class="display-6 mb-2 text-primary" th:text="${#lists.size(alerts)}">0</div>
+                        <div class="text-muted">Total Alerts</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <div class="display-6 mb-2 text-danger" th:text="${unacknowledgedCount}">0</div>
+                        <div class="text-muted">Unacknowledged</div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="section">
-            <div class="section-header">
-                <h2 class="section-title">🚨 System Alerts</h2>
-                <button class="btn btn-primary" onclick="acknowledgeAll()">Acknowledge All</button>
-            </div>
-
-            <div class="stats-box">
-                <div class="stat-item">
-                    <div class="stat-value" th:text="${#lists.size(alerts)}">0</div>
-                    <div class="stat-label">Total Alerts</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" th:text="${unacknowledgedCount}">0</div>
-                    <div class="stat-label">Unacknowledged</div>
-                </div>
-            </div>
-
-            <div th:if="${!#lists.isEmpty(alerts)}">
-                <div th:each="alert : ${alerts}" 
-                     th:classappend="${alert.acknowledged ? 'acknowledged' : ''}">
-                    <div class="alert-card" 
-                         th:classappend="${alert.severity == 'CRITICAL' ? 'alert-critical' : (alert.severity == 'WARNING' ? 'alert-warning' : 'alert-info')}">
-                        <div class="alert-content">
-                            <div class="alert-header">
-                                <span class="alert-type" th:text="${alert.alertType}">ALERT_TYPE</span>
-                                <span class="alert-severity" 
-                                      th:classappend="${alert.severity == 'CRITICAL' ? 'severity-critical' : (alert.severity == 'WARNING' ? 'severity-warning' : 'severity-info')}"
-                                      th:text="${alert.severity}">WARNING</span>
-                                <span th:if="${alert.acknowledged}" style="color: #28a745; font-weight: 600;">✓ Acknowledged</span>
-                            </div>
-                            <div class="alert-message" th:text="${alert.message}">
-                                Alert message goes here
-                            </div>
-                            <div class="alert-meta">
-                                Created: <span th:text="${#temporals.format(alert.createdAt, 'yyyy-MM-dd HH:mm:ss')}">2024-01-01 12:00:00</span>
-                                <span th:if="${alert.metricValue != null}">
-                                    | Value: <span th:text="${#numbers.formatDecimal(alert.metricValue, 1, 2)}">0</span>
-                                    | Threshold: <span th:text="${#numbers.formatDecimal(alert.threshold, 1, 2)}">0</span>
-                                </span>
+        <!-- Alerts List -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="ti ti-alert-triangle me-2"></i>Active Alerts</h3>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${!#lists.isEmpty(alerts)}">
+                            <div th:each="alert : ${alerts}" class="mb-3"
+                                 th:classappend="${alert.acknowledged ? 'opacity-50' : ''}">
+                                <div class="alert"
+                                     th:classappend="${alert.severity == 'CRITICAL' ? 'alert-danger' : (alert.severity == 'WARNING' ? 'alert-warning' : 'alert-info')}">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex align-items-center gap-2 mb-2">
+                                                <strong th:text="${alert.alertType}">ALERT_TYPE</strong>
+                                                <span class="badge"
+                                                      th:classappend="${alert.severity == 'CRITICAL' ? 'bg-danger' : (alert.severity == 'WARNING' ? 'bg-warning' : 'bg-info')}"
+                                                      th:text="${alert.severity}">WARNING</span>
+                                                <span th:if="${alert.acknowledged}" class="badge bg-success">
+                                                    <i class="ti ti-check me-1"></i>Acknowledged
+                                                </span>
+                                            </div>
+                                            <div class="mb-2" th:text="${alert.message}">
+                                                Alert message goes here
+                                            </div>
+                                            <div class="text-muted small">
+                                                <i class="ti ti-clock me-1"></i>
+                                                Created: <span th:text="${#temporals.format(alert.createdAt, 'yyyy-MM-dd HH:mm:ss')}">2024-01-01 12:00:00</span>
+                                                <span th:if="${alert.metricValue != null}">
+                                                    | Value: <span th:text="${#numbers.formatDecimal(alert.metricValue, 1, 2)}">0</span>
+                                                    | Threshold: <span th:text="${#numbers.formatDecimal(alert.threshold, 1, 2)}">0</span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <button th:if="${!alert.acknowledged}"
+                                                    class="btn btn-sm btn-success"
+                                                    th:onclick="'acknowledgeAlert(' + ${alert.id} + ')'">
+                                                <i class="ti ti-check"></i> Acknowledge
+                                            </button>
+                                            <button class="btn btn-sm btn-danger"
+                                                    th:onclick="'deleteAlert(' + ${alert.id} + ')'">
+                                                <i class="ti ti-trash"></i> Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="alert-actions">
-                            <button th:if="${!alert.acknowledged}" 
-                                    class="btn btn-sm btn-success" 
-                                    th:onclick="'acknowledgeAlert(' + ${alert.id} + ')'">
-                                Acknowledge
-                            </button>
-                            <button class="btn btn-sm btn-danger" 
-                                    th:onclick="'deleteAlert(' + ${alert.id} + ')'">
-                                Delete
-                            </button>
+
+                        <div class="empty" th:if="${#lists.isEmpty(alerts)}">
+                            <div class="empty-icon">
+                                <i class="ti ti-check"></i>
+                            </div>
+                            <p class="empty-title">No alerts at this time</p>
+                            <p class="empty-subtitle text-muted">Your system is running smoothly</p>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <div class="no-data" th:if="${#lists.isEmpty(alerts)}">
-                ✓ No alerts at this time
-            </div>
         </div>
     </div>
 
-    <script>
-        function acknowledgeAlert(id) {
-            fetch(`/api/alerts/${id}/acknowledge`, {
-                method: 'POST'
-            }).then(() => location.reload());
-        }
-
-        function acknowledgeAll() {
-            fetch('/api/alerts/acknowledge-all', {
-                method: 'POST'
-            }).then(() => location.reload());
-        }
-
-        function deleteAlert(id) {
-            if (confirm('Are you sure you want to delete this alert?')) {
-                fetch(`/api/alerts/${id}`, {
-                    method: 'DELETE'
-                }).then(() => location.reload());
+    <!-- Page JavaScript -->
+    <th:block layout:fragment="extra-js">
+        <script>
+            function acknowledgeAlert(id) {
+                API.post(`/api/alerts/${id}/acknowledge`)
+                    .then(() => {
+                        Toast.success('Alert acknowledged');
+                        setTimeout(() => location.reload(), 1000);
+                    })
+                    .catch(() => Toast.error('Failed to acknowledge alert'));
             }
-        }
-    </script>
+
+            function acknowledgeAll() {
+                API.post('/api/alerts/acknowledge-all')
+                    .then(() => {
+                        Toast.success('All alerts acknowledged');
+                        setTimeout(() => location.reload(), 1000);
+                    })
+                    .catch(() => Toast.error('Failed to acknowledge alerts'));
+            }
+
+            function deleteAlert(id) {
+                confirmAction('Are you sure you want to delete this alert?', () => {
+                    API.delete(`/api/alerts/${id}`)
+                        .then(() => {
+                            Toast.success('Alert deleted');
+                            setTimeout(() => location.reload(), 1000);
+                        })
+                        .catch(() => Toast.error('Failed to delete alert'));
+                });
+            }
+        </script>
+    </th:block>
 </body>
 </html>
